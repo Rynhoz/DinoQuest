@@ -94,18 +94,52 @@ function saveState() {
 function doLogin() {
     const name = document.getElementById('login-name').value.trim();
     const email = document.getElementById('login-email').value.trim();
-    if (!name) { showToast('⚠️ Ingresa tu nombre'); return; }
-    state.userName = name;
-    state.isDemo = false;
-    saveState();
-    enterApp();
+    const pass = document.getElementById('login-pass').value.trim();
+    const btn = document.getElementById('login-btn');
+    
+    // Validación
+    if (!name) { 
+        showToast('⚠️ Ingresa tu nombre'); 
+        return; 
+    }
+    if (name.length < 2) {
+        showToast('⚠️ El nombre debe tener al menos 2 caracteres');
+        return;
+    }
+    if (email && !email.includes('@')) {
+        showToast('⚠️ Correo inválido');
+        return;
+    }
+    if (pass && pass.length < 4) {
+        showToast('⚠️ La contraseña debe tener al menos 4 caracteres');
+        return;
+    }
+    
+    // Feedback visual
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Cargando...';
+    
+    // Simulación de proceso (después de 800ms)
+    setTimeout(() => {
+        state.userName = name;
+        state.isDemo = false;
+        saveState();
+        enterApp();
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }, 800);
 }
+
 
 function doDemo() {
     state.userName = 'Turista Demo';
     state.isDemo = true;
     saveState();
-    enterApp();
+    showToast('🎲 ¡Bienvenido al modo demo! Explora Tarija sin límites');
+    setTimeout(() => {
+        enterApp();
+    }, 600);
 }
 
 function exitDemoMode() {
@@ -487,16 +521,37 @@ function closeModal() {
 function updateProfileUI() {
     const xpCurrent = state.xp % 100;
     const level = Math.floor(state.xp / 100) + 1;
-    const pct = (xpCurrent / 100 * 100).toFixed(0);
+    const missionsCount = state.completedMissions.length;
+    const accCount = state.unlockedAcc.length;
+    const placesCount = new Set(MISSIONS.filter(m => state.completedMissions.includes(m.id)).map(m => m.place)).size;
+    
+    // Actualizar display de XP
     document.getElementById('xp-display').textContent = `${state.xp} XP`;
-    document.getElementById('dino-level').textContent = level;
-    document.getElementById('profile-name').textContent = state.userName;
-    document.getElementById('profile-mode-label').textContent = state.isDemo ? 'Modo Demo · Explorador' : 'Explorador Chapaco';
-    document.getElementById('stat-visits').textContent = state.completedMissions.length;
-    document.getElementById('stat-acc').textContent = state.unlockedAcc.length;
-    document.getElementById('stat-xp').textContent = state.xp;
-    document.getElementById('lvl-num').textContent = level;
-    document.getElementById('xp-progress-text').textContent = `${xpCurrent} / 100 XP`;
+    
+    // Actualizar nombre y modo
+    const nameEl = document.getElementById('profile-name');
+    if (nameEl) nameEl.textContent = state.userName;
+    
+    const modeEl = document.getElementById('profile-mode-label');
+    if (modeEl) modeEl.textContent = state.isDemo ? 'Modo Demo · Explorador' : 'Explorador Chapaco';
+    
+    const xpProfileEl = document.getElementById('profile-xp');
+    if (xpProfileEl) xpProfileEl.textContent = state.xp;
+    
+    // Actualizar estadísticas
+    const statCollected = document.getElementById('stat-collected');
+    if (statCollected) statCollected.textContent = accCount;
+    
+    const statMissions = document.getElementById('stat-missions');
+    if (statMissions) statMissions.textContent = missionsCount;
+    
+    const statPlaces = document.getElementById('stat-places');
+    if (statPlaces) statPlaces.textContent = placesCount;
+    
+    // Avatar inicial
+    const avatarEl = document.getElementById('avatar-initial');
+    if (avatarEl) avatarEl.textContent = (state.userName[0] || '🧭').toUpperCase();
+}
     document.getElementById('xp-bar').style.width = pct + '%';
 
     // Show correct button section
