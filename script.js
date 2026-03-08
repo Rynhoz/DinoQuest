@@ -135,6 +135,10 @@ function initApp() {
 
     document.getElementById('avatar-initial').textContent =
         (state.userName[0] || '?').toUpperCase();
+
+    initScrollAnimations();
+    renderPlacesGrid();
+    initTarijaMap();
 }
 
 // ── TABS ──────────────────────────────────────
@@ -1577,9 +1581,18 @@ function updateDino3DAccessories() {
 
 function animateDino() {
     animFrame = requestAnimationFrame(animateDino);
+
+    // --- NUEVO: Optimización de rendimiento ---
+    if (typeof is3DVisible !== 'undefined' && !is3DVisible) return;
+
     const t = Date.now() * 0.001;
 
     if (!dinoGroup) { if (dinoRenderer) dinoRenderer.render(dinoScene, dinoCamera); return; }
+
+    // --- NUEVO: Movimiento de cámara suave (Parallax) ---
+    dinoCamera.position.x += (mouseX * 1.5 - dinoCamera.position.x) * 0.05;
+    dinoCamera.position.y += (-mouseY * 1.5 + 1.6 - dinoCamera.position.y) * 0.05;
+    dinoCamera.lookAt(0, 1.1, 0);
 
     // Gentle float + subtle sway
     dinoGroup.position.y = Math.sin(t * 0.85) * 0.08 - 0.72;
@@ -1686,3 +1699,72 @@ function showToast(msg) {
         enterApp();
     }
 })();
+
+// ── NUEVO: OPTIMIZACIÓN Y ANIMACIONES AL HACER SCROLL ──
+let is3DVisible = true;
+
+function initScrollAnimations() {
+    const sections = document.querySelectorAll('.fade-in, .app-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Efecto Fade-in y Slide-up
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+
+                // Actualizar indicador activo en la Navbar
+                const id = entry.target.getAttribute('id');
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${id}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            // Optimización: solo renderizar 3D cuando la sección #home está en vista
+            if (entry.target.id === 'home') {
+                is3DVisible = entry.isIntersecting;
+            }
+        });
+    }, observerOptions);
+
+    sections.forEach(sec => observer.observe(sec));
+}
+
+// ── NUEVO: GENERACIÓN DINÁMICA DE LA SECCIÓN LUGARES ──
+function renderPlacesGrid() {
+    const grid = document.getElementById('places-grid');
+    if (!grid) return;
+
+    grid.innerHTML = MAP_PLACES.map((place, index) => `
+    <div class="place-card" style="animation-delay: ${index * 0.05}s">
+      <div class="place-img-placeholder">${place.emoji}</div>
+      <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--cream);">${place.name}</h3>
+      <p style="font-size:0.85rem; color:rgba(200,169,126,0.7); line-height:1.5;">${place.desc}</p>
+      <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--sage); font-weight: 600; cursor:pointer;" onclick="smoothFlyToPlace(${place.lat}, ${place.lng})">
+        Ver en el mapa →
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── NUEVO: MAPA SUAVE ──
+function smoothFlyToPlace(lat, lng) {
+    // Te lleva a la sección del mapa
+    window.location.hash = "#map";
+    // Hace un zoom y paneo suave
+    if (tarijaMap) {
+        tarijaMap.flyTo([lat, lng], 16, {
+            animate: true,
+            duration: 1.5
+        });
+    }
+}
