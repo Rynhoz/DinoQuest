@@ -521,6 +521,7 @@ function closeModal() {
 function updateProfileUI() {
     const xpCurrent = state.xp % 100;
     const level = Math.floor(state.xp / 100) + 1;
+    const pct = (xpCurrent / 100 * 100).toFixed(0);
     const missionsCount = state.completedMissions.length;
     const accCount = state.unlockedAcc.length;
     const placesCount = new Set(MISSIONS.filter(m => state.completedMissions.includes(m.id)).map(m => m.place)).size;
@@ -551,8 +552,10 @@ function updateProfileUI() {
     // Avatar inicial
     const avatarEl = document.getElementById('avatar-initial');
     if (avatarEl) avatarEl.textContent = (state.userName[0] || '🧭').toUpperCase();
-}
-    document.getElementById('xp-bar').style.width = pct + '%';
+    
+    // Barra de XP
+    const xpBar = document.getElementById('xp-bar');
+    if (xpBar) xpBar.style.width = pct + '%';
 
     // Show correct button section
     const demoSection = document.getElementById('demo-exit-section');
