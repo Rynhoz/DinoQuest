@@ -1768,3 +1768,27 @@ function smoothFlyToPlace(lat, lng) {
         });
     }
 }
+
+// ── EXPOSICIÓN GLOBAL DE FUNCIONES PARA MÓDULOS ──
+// Permite que los atributos onclick en el HTML accedan a las funciones
+if (typeof window !== 'undefined') {
+    window.doLogin = doLogin;
+    window.doDemo = doDemo;
+    window.exitDemoMode = exitDemoMode;
+    window.enterApp = enterApp;
+    window.tapDino = tapDino;
+    window.switchTab = switchTab;
+    window.toggleEquip = toggleEquip;
+    window.showToast = showToast;
+    window.openARFromMission = openARFromMission;
+    window.shareMission = shareMission;
+    window.claimARPoint = claimARPoint;
+    window.simulateScan = simulateScan;
+    window.equipAndDiscount = equipAndDiscount;
+    window.closeModal = closeModal;
+    window.copyDiscountCode = copyDiscountCode;
+    window.closeDiscountModal = closeDiscountModal;
+    window.startCamera = startCamera;
+    window.closeAR = closeAR;
+    window.smoothFlyToPlace = smoothFlyToPlace;
+}
