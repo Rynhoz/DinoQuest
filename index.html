@@ -201,11 +201,114 @@ html, body {
   isolation: isolate; /* prevent any bleed from login images */
 }
 
+/* ═══════════════════════════════
+   SPLASH SCREEN
+═══════════════════════════════ */
+#screen-splash {
+  position: fixed; inset: 0;
+  z-index: 99999;
+  background: linear-gradient(160deg, #0e0a05 0%, #1a1006 50%, #0d0804 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+#screen-splash.fade-out {
+  opacity: 0; pointer-events: none;
+}
+
+.splash-logo-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  animation: splash-in 0.6s cubic-bezier(0.34,1.3,0.64,1) both;
+}
+@keyframes splash-in {
+  from { opacity:0; transform: scale(0.72) translateY(24px); }
+  to   { opacity:1; transform: scale(1)    translateY(0); }
+}
+.splash-logo-img {
+  width: 140px; height: 140px;
+  border-radius: 28px;
+  box-shadow: 0 0 0 1px rgba(201,152,42,0.18), 0 12px 50px rgba(0,0,0,0.7), 0 0 60px rgba(201,152,42,0.1);
+  object-fit: contain;
+  background: rgba(20,14,6,0.4);
+}
+.splash-title {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem; font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.8), 0 0 40px rgba(201,152,42,0.2);
+}
+.splash-sub {
+  font-size: 0.68rem; color: rgba(201,152,42,0.7);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-top: -0.6rem;
+}
+.splash-bar {
+  width: 120px; height: 2px;
+  background: rgba(201,152,42,0.15);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+.splash-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--vine), var(--gold));
+  border-radius: 1px;
+  animation: splash-load 1.6s ease forwards;
+}
+@keyframes splash-load {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ═══════════════════════════════
+   LOGIN — logo pinned at top
+═══════════════════════════════ */
+.login-logo-bar {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.1rem 0 0.6rem;
+  flex-shrink: 0;
+  position: relative; z-index: 3;
+}
+.login-logo-bar img {
+  width: 58px; height: 58px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,152,42,0.18);
+  object-fit: contain;
+}
+
+/* Login background — images scroll top to bottom */
+.login-scroll-bg {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.login-scroll-img {
+  position: absolute;
+  left: 0; right: 0;
+  width: 100%;
+  height: 55%;
+  object-fit: cover;
+  opacity: 0.38;
+  animation: login-scroll-down 12s linear infinite;
+}
+.login-scroll-img:nth-child(2) {
+  animation-delay: -6s;
+}
+@keyframes login-scroll-down {
+  0%   { top: -55%; opacity: 0; }
+  8%   { opacity: 0.38; }
+  88%  { opacity: 0.38; }
+  100% { top: 100%; opacity: 0; }
+}
+
 #screen-login {
   align-items: center;
   justify-content: flex-start;
   padding: 0;
-  background: var(--bg);
+  background: linear-gradient(160deg, #0e0a05 0%, #1a1006 60%, #0d0804 100%);
   min-height: 100vh;
   position: relative;
   overflow: hidden;
@@ -601,6 +704,63 @@ html, body {
 }
 
 /* ═══════════════════════════════
+   HERO FLOAT BAR  (QR + Misión)
+   Only shown in sec-hero
+═══════════════════════════════ */
+.hero-float-bar {
+  position: fixed;
+  top: 68px; /* just below glass-nav */
+  left: 50%; transform: translateX(-50%);
+  width: calc(100% - 2rem); max-width: 398px;
+  display: flex; align-items: center;
+  z-index: 8500;
+  pointer-events: none;
+  gap: 0.5rem;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.hero-float-bar.hidden  { opacity:0; transform:translateX(-50%) translateY(-6px); pointer-events:none; }
+.hero-float-bar.visible { opacity:1; transform:translateX(-50%) translateY(0);   pointer-events:auto; }
+
+/* Next-mission button — left, yellow circle */
+.hfb-mission-btn {
+  width: 46px; height: 46px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg,#e4b84a,#c9982a);
+  border:none; border-radius:50%;
+  font-size:1.35rem; cursor:pointer;
+  box-shadow:0 3px 14px rgba(201,152,42,0.6),0 1px 4px rgba(0,0,0,0.5);
+  transition:transform 0.18s,box-shadow 0.18s;
+}
+.hfb-mission-btn:hover  { transform:scale(1.1); box-shadow:0 5px 20px rgba(201,152,42,0.75); }
+.hfb-mission-btn:active { transform:scale(0.94); }
+
+/* Spacer */
+.hfb-spacer { flex:1; }
+
+/* QR button — right */
+.hfb-qr-btn {
+  display:flex; align-items:center; gap:0.35rem;
+  background:rgba(13,10,6,0.82);
+  border:1px solid rgba(201,152,42,0.38);
+  border-radius:0.7rem;
+  padding:0.42rem 0.7rem;
+  cursor:pointer;
+  backdrop-filter:blur(14px);
+  flex-shrink:0;
+  transition:background 0.18s;
+}
+.hfb-qr-btn:hover { background:rgba(201,152,42,0.18); }
+.hfb-qr-btn span  { font-size:0.6rem; color:var(--gold-light); font-weight:700; text-transform:uppercase; letter-spacing:0.07em; }
+
+.hero-carousel-slide { animation: fadeIn 0.35s ease; }
+.carousel-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(201,152,42,0.25); border: 1px solid rgba(201,152,42,0.3);
+  cursor: pointer; transition: all 0.2s; display: inline-block;
+}
+.carousel-dot.active { background: var(--gold); width: 16px; border-radius: 3px; }
+
+/* ═══════════════════════════════
    SECTION: HERO / LANDING
 ═══════════════════════════════ */
 #sec-hero {
@@ -637,7 +797,7 @@ html, body {
   animation: float 7s ease-in-out infinite;
 }
 
-.hero-content { position: relative; z-index: 1; }
+.hero-content { position: absolute; bottom: 0; left: 0; right: 0; z-index: 2; padding: 0 1.5rem 1.4rem; }
 .hero-tag {
   display: inline-flex; align-items: center; gap: 0.35rem;
   background: rgba(201,152,42,0.12);
@@ -799,12 +959,15 @@ html, body {
 
 /* ═══ ELEGANT MAP MARKERS ═══ */
 @keyframes marker-float {
-  0%,100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(-6px) scale(1.02); }
+  0%   { transform: translateY(0)    scale(1);    }
+  25%  { transform: translateY(-3px) scale(1.01); }
+  50%  { transform: translateY(-6px) scale(1.02); }
+  75%  { transform: translateY(-3px) scale(1.01); }
+  100% { transform: translateY(0)    scale(1);    }
 }
 @keyframes marker-ring-pulse {
-  0%   { transform: scale(1); opacity: 0.7; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0%   { transform: scale(0.9); opacity: 0.65; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
 @keyframes reward-glow {
   0%,100% { box-shadow: 0 0 10px 2px rgba(201,152,42,0.5), 0 6px 20px rgba(0,0,0,0.6); }
@@ -814,11 +977,12 @@ html, body {
 .pgo-marker {
   display: flex; flex-direction: column; align-items: center;
   cursor: pointer;
-  animation: marker-float 3.2s ease-in-out infinite;
+  animation: marker-float 4s ease-in-out infinite;
   width: 52px; height: 64px;
 }
-.pgo-marker:nth-child(odd)  { animation-duration: 3.0s; }
-.pgo-marker:nth-child(even) { animation-duration: 3.6s; animation-delay: -1.5s; }
+.pgo-marker:nth-child(3n+1) { animation-duration: 3.8s; animation-delay: 0s; }
+.pgo-marker:nth-child(3n+2) { animation-duration: 4.4s; animation-delay: -1.8s; }
+.pgo-marker:nth-child(3n+3) { animation-duration: 3.4s; animation-delay: -0.9s; }
 .pgo-marker:hover { animation-play-state: paused; transform: translateY(-7px) scale(1.12) !important; }
 
 /* Outer ring */
@@ -1524,6 +1688,53 @@ html, body {
 scrollbar-width: none;
 ::-webkit-scrollbar { display: none; }
 
+/* ═══ FIREWORKS ═══ */
+@keyframes fw-card-in  { from{transform:translate(-50%,-50%) scale(0)}  to{transform:translate(-50%,-50%) scale(1)} }
+@keyframes fw-card-out { from{transform:translate(-50%,-50%) scale(1);opacity:1} to{transform:translate(-50%,-50%) scale(0.8);opacity:0} }
+@keyframes fw-particle { 0%{transform:translate(-50%,-50%);opacity:1} 100%{transform:translate(calc(-50% + var(--fdx)),calc(-50% + var(--fdy)));opacity:0} }
+@keyframes fw-ring     { 0%{transform:translate(-50%,-50%) scale(1);opacity:0.85} 100%{transform:translate(-50%,-50%) scale(16);opacity:0} }
+
+/* ═══ MISSION POPUP ═══ */
+@keyframes popup-slide-in  { from{opacity:0;transform:translateX(-50%) translateY(-14px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+@keyframes popup-slide-out { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(-10px)} }
+
+/* ═══ ELEGIR RUTA — shifting color glow ═══ */
+@keyframes ruta-shift {
+  0%   { background-position: 0% 50%;   box-shadow: 0 0 16px rgba(74,175,186,0.5),  0 2px 10px rgba(0,0,0,0.4); border-color: rgba(74,175,186,0.7); }
+  16%  { background-position: 20% 50%;  box-shadow: 0 0 16px rgba(201,152,42,0.55), 0 2px 10px rgba(0,0,0,0.4); border-color: rgba(201,152,42,0.75); }
+  33%  { background-position: 40% 50%;  box-shadow: 0 0 16px rgba(138,26,54,0.55),  0 2px 10px rgba(0,0,0,0.4); border-color: rgba(138,26,54,0.7); }
+  50%  { background-position: 60% 50%;  box-shadow: 0 0 16px rgba(90,128,66,0.55),  0 2px 10px rgba(0,0,0,0.4); border-color: rgba(90,128,66,0.7); }
+  66%  { background-position: 80% 50%;  box-shadow: 0 0 16px rgba(201,152,42,0.55), 0 2px 10px rgba(0,0,0,0.4); border-color: rgba(201,152,42,0.75); }
+  83%  { background-position: 90% 50%;  box-shadow: 0 0 16px rgba(74,175,186,0.5),  0 2px 10px rgba(0,0,0,0.4); border-color: rgba(74,175,186,0.7); }
+  100% { background-position: 100% 50%; box-shadow: 0 0 16px rgba(74,175,186,0.5),  0 2px 10px rgba(0,0,0,0.4); border-color: rgba(74,175,186,0.7); }
+}
+.btn-elegir-ruta {
+  flex: 1.4;
+  background: linear-gradient(270deg,
+    rgba(74,175,186,0.35),
+    rgba(201,152,42,0.35),
+    rgba(138,26,54,0.3),
+    rgba(90,128,66,0.3),
+    rgba(201,152,42,0.35),
+    rgba(74,175,186,0.35)
+  );
+  background-size: 400% 400%;
+  border: 1.5px solid rgba(74,175,186,0.65);
+  color: var(--cream);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.6rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  animation: ruta-shift 4s ease infinite;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+.btn-elegir-ruta:hover  { transform: translateY(-1px) scale(1.02); filter: brightness(1.15); }
+.btn-elegir-ruta:active { transform: scale(0.97); }
+
 /* ═══════════════════════════════
    DINO PROFILES
 ═══════════════════════════════ */
@@ -1577,23 +1788,43 @@ scrollbar-width: none;
 <!-- ════════════════════════════════
      SCREEN: LOGIN
 ════════════════════════════════ -->
-<div id="screen-login" class="screen active">
+<!-- ════════════════════════════════
+     SPLASH SCREEN
+════════════════════════════════ -->
+<div id="screen-splash">
+  <div class="splash-logo-wrap">
+    <img class="splash-logo-img"
+      src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772977904/file_00000000d13071f5a9a7f0b21686ed5d_rhymwv.png"
+      alt="DynoQuest Logo"
+      onerror="this.style.display='none'"/>
+    <div class="splash-title">DynoQuest</div>
+    <div class="splash-sub">Tarija Discovery · Bolivia</div>
+    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN: LOGIN
+════════════════════════════════ -->
+<div id="screen-login" class="screen">
   <div class="login-bg-glow"></div>
 
-  <!-- Image crossfade carousel at top -->
-  <div style="position:relative;width:100%;height:200px;overflow:hidden;margin-bottom:0.5rem;flex-shrink:0;">
-    <img id="login-img-1" src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772947362/Gemini_Generated_Image_zcdbzzzcdbzzzcdb_e2azx1.png" alt="Tarija" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1.5s ease;"/>
-    <img id="login-img-2" src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772951156/Gemini_Generated_Image_g1jx95g1jx95g1jx_gw0ogl.png" alt="DynoQuest" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.5s ease;"/>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,10,6,0.1) 0%,rgba(13,10,6,0.85) 100%);z-index:1;"></div>
-    <div style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);z-index:2;text-align:center;">
-      <div style="font-family:'Cinzel',serif;font-size:2rem;font-weight:700;color:var(--cream);letter-spacing:0.08em;text-shadow:0 2px 16px rgba(0,0,0,0.7)">DynoQuest</div>
-      <div style="font-size:0.68rem;color:rgba(201,152,42,0.8);letter-spacing:0.2em;text-transform:uppercase;margin-top:0.2rem">Tarija Discovery · Bolivia</div>
-    </div>
-  </div>
+  <!-- Centered login layout -->
+  <div style="position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:100vh;padding:2rem 1.5rem;">
 
-  <div style="padding:0 1.5rem;display:flex;flex-direction:column;align-items:center;width:100%;flex:1;">
-    <div class="login-card fade-up-2" style="margin-top:0.5rem;">
-      <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage);font-weight:600;margin-bottom:1.2rem;font-family:'Cinzel',serif;">Iniciar aventura</p>
+    <!-- Logo PNG — no border/box, just the image -->
+    <img id="login-logo-img"
+      src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772977904/file_00000000d13071f5a9a7f0b21686ed5d_rhymwv.png"
+      alt="DynoQuest"
+      style="width:110px;height:110px;object-fit:contain;opacity:0;transition:opacity 0.5s ease 0.1s;margin-bottom:0.45rem;filter:drop-shadow(0 4px 18px rgba(0,0,0,0.6));"
+      onerror="this.style.display='none'"/>
+
+    <!-- Subtitle only — no "DynoQuest" text -->
+    <div style="font-size:0.62rem;color:rgba(201,152,42,0.7);letter-spacing:0.22em;text-transform:uppercase;margin-bottom:1.8rem;opacity:0;transition:opacity 0.5s ease 0.25s;" id="login-sub-label">Tarija Discovery · Bolivia</div>
+
+    <!-- Login card -->
+    <div class="login-card" style="width:100%;max-width:340px;">
+      <p style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage);font-weight:600;margin-bottom:1.2rem;font-family:'Cinzel',serif;text-align:center;">Iniciar aventura</p>
       <div style="display:flex;flex-direction:column;gap:0.65rem">
         <input class="input-field" id="login-name" type="text" placeholder="Tu nombre explorador" autocomplete="off">
         <input class="input-field" id="login-email" type="email" placeholder="Correo electrónico">
@@ -1607,7 +1838,7 @@ scrollbar-width: none;
       </div>
     </div>
 
-    <p style="margin-top:1rem;font-size:0.68rem;color:rgba(200,169,126,0.3);text-align:center;max-width:260px" class="fade-up-4">
+    <p style="margin-top:1.1rem;font-size:0.67rem;color:rgba(200,169,126,0.28);text-align:center;max-width:240px;line-height:1.5;">
       Colecciona accesorios para CrocoRex visitando los lugares históricos y naturales de Tarija
     </p>
   </div>
@@ -1634,6 +1865,20 @@ scrollbar-width: none;
     </div>
   </nav>
 
+  <!-- ─── HERO FLOAT BAR (Misión + QR) ─ only shown on Inicio tab ─── -->
+  <div class="hero-float-bar hidden" id="hero-float-bar">
+    <button class="hfb-mission-btn" onclick="showNextMissionToast()" title="Próxima misión">💡</button>
+    <div class="hfb-spacer"></div>
+    <button class="hfb-qr-btn" onclick="openQRScanner()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <path d="M14 14h2v2h-2zM18 14h3v3h-3zM14 18h2v3h-2zM19 19h2v2h-2z"/>
+      </svg>
+      <span>QR</span>
+    </button>
+  </div>
+
   <!-- ─── SECTION: HERO ──────────────────────── -->
   <section class="app-section active" id="sec-hero">
 
@@ -1645,65 +1890,70 @@ scrollbar-width: none;
       <div class="hero-banner-float" style="top:15%;left:8%;z-index:1">🌿</div>
       <div class="hero-banner-float" style="top:25%;right:10%;animation-delay:-3s;z-index:1">🍇</div>
       <div class="hero-banner-float" style="top:10%;right:25%;animation-delay:-1.5s;font-size:2.5rem;z-index:1">🦕</div>
-      <!-- QR Scanner button -->
-      <button onclick="openQRScanner()" style="position:absolute;top:16px;right:16px;z-index:10;background:rgba(13,10,6,0.65);border:1px solid rgba(201,152,42,0.35);border-radius:0.75rem;padding:0.45rem 0.65rem;cursor:pointer;backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;gap:0.15rem;transition:all 0.2s ease;" onmouseover="this.style.background='rgba(201,152,42,0.2)'" onmouseout="this.style.background='rgba(13,10,6,0.65)'">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/>
-          <path d="M14 14h2v2h-2zM18 14h3v3h-3zM14 18h2v3h-2zM19 19h2v2h-2z"/>
-        </svg>
-        <span style="font-size:0.52rem;color:var(--gold-light);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">QR</span>
-      </button>
-      <div class="hero-content" style="position:relative;z-index:2;">
+      <div class="hero-content">
         <div class="hero-tag">🦕 Tarija · Bolivia</div>
         <h1 class="hero-title" style="font-size:2.3rem;text-shadow:0 2px 20px rgba(0,0,0,0.8);">Descubre la <em>magia</em><br>de Tarija</h1>
         <p class="hero-subtitle" style="font-size:0.88rem;text-shadow:0 1px 8px rgba(0,0,0,0.7);">Explora viñedos, cañones, sitios culturales y paisajes únicos. Colecciona accesorios visitando cada lugar.</p>
-        <div class="hero-actions" style="flex-direction:column;gap:0.5rem;">
-          <div style="display:flex;gap:0.5rem;">
-            <button class="hero-btn hero-btn-primary" onclick="switchSection('map')" style="flex:1;">
-              🗺️ Explorar Mapa
-            </button>
-            <button class="hero-btn hero-btn-secondary" onclick="switchSection('explore')" style="flex:1;">
-              🌄 Descubrir
-            </button>
-          </div>
-          <div style="display:flex;gap:0.5rem;">
-            <button class="hero-btn" onclick="scrollToDino()" style="flex:1;background:rgba(74,175,186,0.12);border:1px solid rgba(74,175,186,0.25);color:var(--sky);font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;padding:0.6rem;border-radius:0.75rem;cursor:pointer;transition:all 0.2s ease;letter-spacing:0.01em;">
-              🦕 Ver Mascota
-            </button>
-            <button class="hero-btn" onclick="scrollToProfiles()" style="flex:1.4;background:linear-gradient(135deg,rgba(201,152,42,0.25),rgba(138,26,54,0.2));border:1.5px solid rgba(201,152,42,0.45);color:var(--gold-light);font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;padding:0.6rem;border-radius:0.75rem;cursor:pointer;transition:all 0.25s ease;letter-spacing:0.01em;box-shadow:0 2px 12px rgba(201,152,42,0.2);">
-              ✦ Elegir Ruta
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Quick stats -->
-    <div class="stats-strip">
-      <div class="stat-pill scroll-reveal stagger-1">
-        <div class="stat-pill-num">17</div>
-        <div class="stat-pill-lbl">Lugares</div>
+    <!-- 4 action buttons — now BELOW banner, ABOVE dino -->
+    <div style="padding:0.75rem 1rem 0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
+      <div style="display:flex;gap:0.5rem;">
+        <button class="hero-btn hero-btn-primary" onclick="switchSection('map')" style="flex:1;">
+          🗺️ Explorar Mapa
+        </button>
+        <button class="hero-btn hero-btn-secondary" onclick="switchSection('explore')" style="flex:1;">
+          🌄 Descubrir
+        </button>
       </div>
-      <div class="stat-pill scroll-reveal stagger-2">
-        <div class="stat-pill-num">17</div>
-        <div class="stat-pill-lbl">Accesorios</div>
-      </div>
-      <div class="stat-pill scroll-reveal stagger-3">
-        <div class="stat-pill-num" style="font-size:1.1rem">+30</div>
-        <div class="stat-pill-lbl">Especies</div>
-      </div>
-      <div class="stat-pill scroll-reveal stagger-4">
-        <div class="stat-pill-num">1900m</div>
-        <div class="stat-pill-lbl">Altitud</div>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="hero-btn" onclick="scrollToDino()" style="flex:1;background:rgba(74,175,186,0.12);border:1px solid rgba(74,175,186,0.25);color:var(--sky);font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;padding:0.6rem;border-radius:0.75rem;cursor:pointer;transition:all 0.2s ease;letter-spacing:0.01em;">
+          🦕 Ver Mascota
+        </button>
+        <button class="btn-elegir-ruta" onclick="scrollToProfiles()">
+          ✦ Elegir Ruta
+        </button>
       </div>
     </div>
-    <!-- Cuna de gigantes data banner -->
-    <div style="margin:0 1rem 0.5rem;padding:0.7rem 1rem;background:linear-gradient(135deg,rgba(74,175,186,0.08),rgba(201,152,42,0.06));border:1px solid rgba(74,175,186,0.15);border-radius:0.9rem;display:flex;align-items:center;gap:0.6rem;">
-      <span style="font-size:1.4rem;flex-shrink:0">🦣</span>
-      <div>
-        <div style="font-size:0.72rem;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.1rem">Tarija · Cuna de Gigantes</div>
-        <div style="font-size:0.7rem;color:rgba(232,217,188,0.55);line-height:1.4">Más de 30 especies de megafauna prehistórica habitaron estos valles hace 11.000 años, incluyendo mastodontes, megaterios y gliptodontes.</div>
+
+    <!-- Rotating stats carousel (stats-strip + Cuna de Gigantes banner) -->
+    <div id="hero-stats-carousel" style="position:relative;overflow:hidden;margin-bottom:0.25rem;">
+      <!-- Slide 0: stats pills -->
+      <div class="hero-carousel-slide active" id="carousel-slide-0">
+        <div class="stats-strip">
+          <div class="stat-pill scroll-reveal stagger-1">
+            <div class="stat-pill-num">17</div>
+            <div class="stat-pill-lbl">Lugares</div>
+          </div>
+          <div class="stat-pill scroll-reveal stagger-2">
+            <div class="stat-pill-num">17</div>
+            <div class="stat-pill-lbl">Accesorios</div>
+          </div>
+          <div class="stat-pill scroll-reveal stagger-3">
+            <div class="stat-pill-num" style="font-size:1.1rem">+30</div>
+            <div class="stat-pill-lbl">Especies</div>
+          </div>
+          <div class="stat-pill scroll-reveal stagger-4">
+            <div class="stat-pill-num">1900m</div>
+            <div class="stat-pill-lbl">Altitud</div>
+          </div>
+        </div>
+      </div>
+      <!-- Slide 1: Cuna de Gigantes banner -->
+      <div class="hero-carousel-slide" id="carousel-slide-1" style="display:none;">
+        <div style="margin:0 1rem 0.5rem;padding:0.7rem 1rem;background:linear-gradient(135deg,rgba(74,175,186,0.08),rgba(201,152,42,0.06));border:1px solid rgba(74,175,186,0.15);border-radius:0.9rem;display:flex;align-items:center;gap:0.6rem;">
+          <span style="font-size:1.4rem;flex-shrink:0">🦣</span>
+          <div>
+            <div style="font-size:0.72rem;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.1rem">Tarija · Cuna de Gigantes</div>
+            <div style="font-size:0.7rem;color:rgba(232,217,188,0.55);line-height:1.4">Más de 30 especies de megafauna prehistórica habitaron estos valles hace 11.000 años, incluyendo mastodontes, megaterios y gliptodontes.</div>
+          </div>
+        </div>
+      </div>
+      <!-- Dots indicator -->
+      <div style="display:flex;justify-content:center;gap:0.35rem;padding-bottom:0.4rem;">
+        <span class="carousel-dot active" id="cdot-0" onclick="goCarouselSlide(0)"></span>
+        <span class="carousel-dot" id="cdot-1" onclick="goCarouselSlide(1)"></span>
       </div>
     </div>
 
@@ -1810,6 +2060,14 @@ scrollbar-width: none;
       <div class="section-header-title">🦕 Elige tu Perfil de Ruta</div>
       <div class="section-header-sub">Cambia cuando quieras</div>
     </div>
+
+    <!-- Profile info box — appears ABOVE the cards -->
+    <div id="dino-profile-desc-box" style="margin:0 1rem 0.75rem;padding:0.9rem 1rem;background:linear-gradient(135deg,rgba(74,175,186,0.1),rgba(201,152,42,0.06));border:1px solid rgba(74,175,186,0.22);border-radius:1rem;">
+      <div style="font-size:0.68rem;color:var(--sky);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.2rem" id="dp-selected-label">Perfil activo</div>
+      <div style="font-size:0.8rem;color:rgba(232,217,188,0.75);line-height:1.45;margin-bottom:0.3rem" id="dp-selected-desc"></div>
+      <div style="font-size:0.72rem;color:var(--gold-light);font-weight:600" id="dp-route-label"></div>
+    </div>
+
     <div style="padding:0 1rem 0.5rem;display:grid;grid-template-columns:1fr 1fr;gap:0.65rem" id="dino-profiles-grid">
 
       <div class="dino-profile-card" id="profile-mammoth" onclick="selectDinoProfile('mammoth')">
@@ -1840,16 +2098,9 @@ scrollbar-width: none;
       </div>
 
     </div>
-    <div id="dino-profile-desc-box" style="margin:0 1rem 0.75rem;padding:0.8rem 1rem;background:rgba(201,152,42,0.06);border:1px solid rgba(201,152,42,0.15);border-radius:1rem;display:none">
-      <div style="font-size:0.68rem;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem" id="dp-selected-label">Perfil activo</div>
-      <div style="font-size:0.8rem;color:rgba(232,217,188,0.7);line-height:1.45" id="dp-selected-desc"></div>
-      <div style="margin-top:0.6rem;font-size:0.72rem;color:var(--gold-light);font-weight:600" id="dp-route-label"></div>
-    </div>
 
-    <div class="next-mission-hint scroll-reveal" style="margin-bottom:0.75rem">
-      <div style="font-size:0.72rem;color:var(--sage);font-weight:600;margin-bottom:0.3rem">💡 Próxima misión</div>
-      <div style="font-size:0.8rem;color:rgba(200,169,126,0.65)" id="next-mission-hint">Cargando misión...</div>
-    </div>
+    <!-- hidden element kept for JS compatibility -->
+    <span id="next-mission-hint" style="display:none"></span>
 
   </section>
 
@@ -1930,7 +2181,7 @@ scrollbar-width: none;
       </div>
     </div>
 
-    <div class="stat-grid">
+    <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr 1.35fr;">
       <div class="stat-card scroll-reveal stagger-1">
         <div class="stat-num" id="stat-visits">0</div>
         <div class="stat-lbl">Lugares</div>
@@ -1942,6 +2193,14 @@ scrollbar-width: none;
       <div class="stat-card scroll-reveal stagger-3">
         <div class="stat-num" id="stat-xp">0</div>
         <div class="stat-lbl">XP Total</div>
+      </div>
+      <!-- Route profile card — sky-blue, wider -->
+      <div class="stat-card scroll-reveal stagger-4" id="profile-route-stat-card"
+        onclick="switchSection('hero');setTimeout(scrollToProfiles,200)"
+        style="background:linear-gradient(160deg,rgba(74,175,186,0.14),rgba(74,175,186,0.06));border-color:rgba(74,175,186,0.28);cursor:pointer;">
+        <div style="font-size:1.4rem;line-height:1;margin-bottom:0.25rem" id="profile-route-stat-icon">🦣</div>
+        <div style="font-family:'Inter',sans-serif;font-size:0.6rem;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:0.06em;line-height:1.3;word-break:break-word" id="profile-route-stat-name">Mamut</div>
+        <div style="font-size:0.52rem;color:rgba(74,175,186,0.55);margin-top:0.15rem;text-transform:uppercase;letter-spacing:0.05em">Ruta</div>
       </div>
     </div>
 
@@ -2136,17 +2395,50 @@ scrollbar-width: none;
 
 <!-- QR SCANNER MODAL -->
 <div id="qr-modal" style="position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="width:100%;max-width:340px;background:rgba(20,15,8,0.98);border:1px solid rgba(201,152,42,0.25);border-radius:1.4rem;padding:1.6rem 1.3rem 1.4rem;text-align:center;position:relative;animation:scaleIn 0.25s ease;">
-    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--vine),var(--gold),var(--wine));border-radius:1.4rem 1.4rem 0 0"></div>
-    <div style="font-size:1.8rem;margin-bottom:0.5rem">📷</div>
-    <div style="font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:var(--cream);margin-bottom:0.3rem">Escanear código QR</div>
-    <div style="font-size:0.75rem;color:rgba(232,217,188,0.5);margin-bottom:1rem;line-height:1.45">Usa la cámara de tu teléfono para escanear el código QR oficial de DynoQuest y desbloquear sorpresas.</div>
-    <!-- QR Code image to scan -->
-    <div style="background:white;border-radius:0.9rem;padding:0.75rem;margin-bottom:1rem;display:inline-block;">
-      <img src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772947342/DinoQuest_vpsgnu.png" alt="DynoQuest QR Code" style="width:180px;height:180px;display:block;border-radius:0.5rem;" onerror="this.parentElement.innerHTML='<div style=\'width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border-radius:0.5rem;font-size:0.75rem;color:#666;text-align:center;padding:0.5rem\'>QR no disponible</div>'"/>
+  <div style="width:100%;max-width:340px;background:rgba(20,15,8,0.98);border:1px solid rgba(201,152,42,0.28);border-radius:1.4rem;text-align:center;position:relative;animation:scaleIn 0.25s ease;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--vine),var(--gold),var(--sky),var(--wine));border-radius:1.4rem 1.4rem 0 0;"></div>
+    <!-- Tab bar -->
+    <div style="display:flex;border-bottom:1px solid rgba(201,152,42,0.12);margin-top:3px;">
+      <button id="qrtab-main"   onclick="switchQRTab('main')"
+        style="flex:1;padding:0.82rem 0.5rem;background:none;border:none;border-bottom:2.5px solid var(--gold);
+               color:var(--gold-light);font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;">
+        📷 DynoQuest
+      </button>
+      <button id="qrtab-donate" onclick="switchQRTab('donate')"
+        style="flex:1;padding:0.82rem 0.5rem;background:none;border:none;border-bottom:2.5px solid transparent;
+               color:rgba(232,217,188,0.4);font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;">
+        💛 Apoyar
+      </button>
     </div>
-    <div style="font-size:0.72rem;color:rgba(232,217,188,0.4);margin-bottom:1rem;">Apunta la cámara de tu dispositivo al código de arriba</div>
-    <button class="btn-secondary" onclick="closeQRModal()" style="max-width:200px;margin:0 auto;">Cerrar</button>
+    <!-- Panel: Main QR -->
+    <div id="qrpanel-main" style="padding:1.3rem 1.3rem 0;">
+      <div style="font-size:1.5rem;margin-bottom:0.35rem">📷</div>
+      <div style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:0.2rem">Código QR Oficial</div>
+      <div style="font-size:0.72rem;color:rgba(232,217,188,0.42);margin-bottom:0.9rem;line-height:1.45">Escanea para acceder a DynoQuest · Tarija Discovery</div>
+      <div style="background:white;border-radius:0.9rem;padding:0.7rem;margin-bottom:0.75rem;display:inline-block;">
+        <img src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772947342/DinoQuest_vpsgnu.png" alt="DynoQuest QR" style="width:170px;height:170px;display:block;border-radius:0.5rem;"
+          onerror="this.parentElement.innerHTML='<div style=\'width:170px;height:170px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border-radius:0.5rem;font-size:0.75rem;color:#666;text-align:center;padding:0.5rem\'>QR no disponible</div>'"/>
+      </div>
+      <div style="font-size:0.68rem;color:rgba(232,217,188,0.32);margin-bottom:1rem;">Apunta la cámara de tu dispositivo al código</div>
+    </div>
+    <!-- Panel: Donate QR -->
+    <div id="qrpanel-donate" style="padding:1.3rem 1.3rem 0;display:none;">
+      <div style="font-size:1.5rem;margin-bottom:0.35rem">💛</div>
+      <div style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:0.2rem">Apoyar DynoQuest</div>
+      <div style="font-size:0.72rem;color:rgba(232,217,188,0.42);margin-bottom:0.9rem;line-height:1.45">Tu apoyo ayuda a mantener y mejorar la aventura. ¡Gracias por creer en Tarija! 🦕</div>
+      <div style="background:white;border-radius:0.9rem;padding:0.7rem;margin-bottom:0.75rem;display:inline-block;">
+        <img id="donate-qr-img" src="https://res.cloudinary.com/ds4qnoypm/image/upload/v1772975187/SmartSelect_20260308_090455_nfyt6l.png" alt="QR Donación" style="width:170px;height:170px;display:block;border-radius:0.5rem;object-fit:cover;"
+          onerror="this.parentElement.innerHTML='<div style=\'width:170px;height:170px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border-radius:0.5rem;font-size:0.75rem;color:#666\'>QR no disponible</div>'"/>
+      </div>
+      <div style="font-size:0.68rem;color:rgba(232,217,188,0.32);margin-bottom:0.7rem;">Escanea o descarga el código para tu donación</div>
+      <button onclick="downloadDonateQR()" style="width:100%;background:linear-gradient(135deg,rgba(201,152,42,0.22),rgba(201,152,42,0.1));border:1.5px solid rgba(201,152,42,0.5);border-radius:0.85rem;padding:0.72rem 1rem;color:var(--gold-light);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.45rem;letter-spacing:0.02em;transition:all 0.2s;margin-bottom:0.75rem;">
+        ⬇️ Descargar QR de donación
+      </button>
+    </div>
+    <!-- Close -->
+    <div style="padding:0 1.3rem 1.3rem;">
+      <button class="btn-secondary" onclick="closeQRModal()" style="width:100%;">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -2336,6 +2628,17 @@ function exitDemoMode() {
 function enterApp() {
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
+  // Always start on Inicio
+  document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+  const heroSec = document.getElementById('sec-hero');
+  if (heroSec) heroSec.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const navHero = document.getElementById('nav-hero');
+  if (navHero) navHero.classList.add('active');
+  currentSection = 'hero';
+  document.querySelector('.bottom-nav')?.style.setProperty('--active-tab', 0);
+  const fb = document.getElementById('hero-float-bar');
+  if (fb) { fb.classList.remove('hidden'); fb.classList.add('visible'); }
   initApp();
 }
 
@@ -2354,6 +2657,7 @@ function initApp() {
   updateNavProfileBadge();
   document.getElementById('avatar-initial').textContent = (state.userName[0] || '?').toUpperCase();
   document.querySelector('.bottom-nav')?.style.setProperty('--active-tab', 0);
+  initHeroCarousel();
   // First time gift
   if (!state.firstHatGiven) {
     state.firstHatGiven = true;
@@ -2397,6 +2701,13 @@ function switchSection(sec) {
   document.querySelector('.bottom-nav')?.style.setProperty('--active-tab', tabIdx);
 
   currentSection = sec;
+
+  // Show/hide hero float bar
+  const fb = document.getElementById('hero-float-bar');
+  if (fb) {
+    if (sec === 'hero') { fb.classList.remove('hidden'); fb.classList.add('visible'); }
+    else                { fb.classList.remove('visible'); fb.classList.add('hidden'); }
+  }
 
   if (sec === 'map') {
     if (!mapInitialized) { mapInitialized = true; setTimeout(() => initTarijaMap(), 80); }
@@ -2823,6 +3134,19 @@ function closeModal() {
   }
 }
 
+function updateProfileRouteCard() {
+  const icon = document.getElementById('profile-route-stat-icon');
+  const name = document.getElementById('profile-route-stat-name');
+  if (!icon || !name) return;
+  if (state.activeProfile && DINO_PROFILES[state.activeProfile]) {
+    const p = DINO_PROFILES[state.activeProfile];
+    icon.textContent = p.badge_icon || p.icon || '🦕';
+    name.textContent = p.name || 'Ruta';
+  } else {
+    icon.textContent = '🦕'; name.textContent = 'Sin ruta';
+  }
+}
+
 // ── PROFILE UI ────────────────────────────────────
 function updateProfileUI() {
   const xpCurrent = state.xp % 100;
@@ -2849,6 +3173,7 @@ function updateProfileUI() {
     realSec.style.display = state.isDemo ? 'none' : 'block';
   }
   renderWallet();
+  updateProfileRouteCard();
 }
 
 function resetGame() {
@@ -3158,7 +3483,12 @@ const PLACE_FUN_FACTS = {
 
 function refreshMapMarkers() {
   if (!tarijaMap) return;
-  Object.values(mapMarkers).forEach(m => m.remove());
+  // Remember which popup was open so we can reopen it after refresh
+  let openPopupPlaceId = null;
+  Object.entries(mapMarkers).forEach(([id, m]) => {
+    if (m.isPopupOpen && m.isPopupOpen()) openPopupPlaceId = id;
+    m.remove();
+  });
   mapMarkers = {};
   MAP_PLACES.forEach(place => {
     const markerClass = getMarkerClass(place.id);
@@ -3181,11 +3511,15 @@ function refreshMapMarkers() {
       ${isDone ? `<div style="color:#7a9e6b;font-size:0.73rem;font-weight:600;margin-bottom:0.35rem">✅ Visitado · ${acc?acc.emoji+' '+acc.name:''}</div>`
                : `<div style="font-size:0.7rem;color:rgba(200,169,126,0.45);margin-bottom:0.35rem">🎒 ${acc?acc.emoji+' '+acc.name:'—'} · 🎁 ${reward.pct}% dto.</div>`}
       ${actionBtn}`;
-    marker.bindPopup(popupContent, { maxWidth:260, autoClose: false, closeOnClick: false });
+    marker.bindPopup(popupContent, { maxWidth:260, autoClose: false, closeOnClick: false, keepInView: true });
     marker.on('click', function() {
       tarijaMap.eachLayer(l => { if (l.getPopup && l.getPopup() && l !== marker) l.closePopup(); });
     });
     mapMarkers[place.id] = marker;
+    // Reopen popup if it was open before the refresh
+    if (openPopupPlaceId !== null && String(place.id) === String(openPopupPlaceId)) {
+      setTimeout(() => marker.openPopup(), 60);
+    }
   });
   // Close popup when clicking the map background
   tarijaMap.off('click');
@@ -3410,21 +3744,28 @@ const DINO_PROFILES = {
 };
 
 function initDinoProfiles() {
-  if (state.activeProfile) {
-    const card = document.getElementById('profile-' + state.activeProfile);
-    if (card) card.classList.add('active');
-    showProfileDesc(state.activeProfile);
+  // Default to mammoth if no profile has been chosen
+  if (!state.activeProfile) {
+    state.activeProfile = 'mammoth';
+    saveState();
   }
+  const card = document.getElementById('profile-' + state.activeProfile);
+  if (card) card.classList.add('active');
+  showProfileDesc(state.activeProfile);
+  updateNavProfileBadge();
+  updateProfileRouteCard();
 }
 
 function selectDinoProfile(profileKey) {
-  // Toggle: clicking active profile deselects
+  // Clicking the already-active profile deselects (allow no route)
   if (state.activeProfile === profileKey) {
     state.activeProfile = null;
     saveState();
     document.querySelectorAll('.dino-profile-card').forEach(c => c.classList.remove('active'));
-    document.getElementById('dino-profile-desc-box').style.display = 'none';
+    const box = document.getElementById('dino-profile-desc-box');
+    if (box) { box.querySelector('#dp-selected-label').textContent = 'Sin perfil seleccionado'; box.querySelector('#dp-selected-desc').textContent = 'Elige un perfil de ruta para personalizar tu experiencia en Tarija.'; box.querySelector('#dp-route-label').textContent = ''; }
     updateNavProfileBadge();
+    updateProfileRouteCard();
     showToast('Perfil de ruta deseleccionado', 'route');
     return;
   }
@@ -3435,17 +3776,21 @@ function selectDinoProfile(profileKey) {
   if (card) card.classList.add('active');
   showProfileDesc(profileKey);
   updateNavProfileBadge();
+  updateProfileRouteCard();
   showToast(`🦕 Perfil ${DINO_PROFILES[profileKey].name} activado`, 'route');
 }
 
 function showProfileDesc(profileKey) {
   const p = DINO_PROFILES[profileKey];
   if (!p) return;
+  const lbl = document.getElementById('dp-selected-label');
+  const desc = document.getElementById('dp-selected-desc');
+  const route = document.getElementById('dp-route-label');
   const box = document.getElementById('dino-profile-desc-box');
-  document.getElementById('dp-selected-label').textContent = p.name + ' · ' + p.badge;
-  document.getElementById('dp-selected-desc').textContent = p.desc;
-  document.getElementById('dp-route-label').textContent = p.route;
-  box.style.display = 'block';
+  if (lbl)  lbl.textContent   = (p.badge_icon||'') + ' ' + p.name + ' · ' + p.badge;
+  if (desc) desc.textContent  = p.desc;
+  if (route) route.textContent = p.route;
+  if (box)  box.style.display = 'block';
 }
 
 // ── 3D DINO ───────────────────────────────────────
@@ -3946,13 +4291,169 @@ function spawnConfetti() {
   }
 }
 
+// ── HERO CAROUSEL ─────────────────────────────────
+let carouselIdx = 0;
+let carouselTimer = null;
+const CAROUSEL_SLIDES = 2;
+
+function goCarouselSlide(idx) {
+  const prev = document.getElementById('carousel-slide-' + carouselIdx);
+  const prevDot = document.getElementById('cdot-' + carouselIdx);
+  const next = document.getElementById('carousel-slide-' + idx);
+  const nextDot = document.getElementById('cdot-' + idx);
+  if (prev) prev.style.display = 'none';
+  if (prevDot) prevDot.classList.remove('active');
+  if (next) next.style.display = 'block';
+  if (nextDot) nextDot.classList.add('active');
+  carouselIdx = idx;
+}
+
+function initHeroCarousel() {
+  clearInterval(carouselTimer);
+  carouselTimer = setInterval(() => {
+    goCarouselSlide((carouselIdx + 1) % CAROUSEL_SLIDES);
+  }, 4000);
+}
+
+// ── NEXT MISSION POPUP ────────────────────────────
+function showNextMissionToast() {
+  const hint = document.getElementById('next-mission-hint');
+  const hintText = hint ? hint.textContent.trim() : '';
+
+  // Find next mission details
+  const next = MISSIONS.find(m => !state.completedMissions.includes(m.id));
+
+  // Remove any existing popup
+  const existing = document.getElementById('mission-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'mission-popup';
+  popup.style.cssText = `position:fixed;top:120px;left:50%;transform:translateX(-50%) translateY(-8px);
+    width:calc(100% - 2rem);max-width:360px;z-index:9000;
+    background:linear-gradient(160deg,rgba(22,15,5,0.97),rgba(18,12,4,0.98));
+    border:1px solid rgba(201,152,42,0.35);border-radius:1.2rem;
+    padding:1.1rem 1.2rem 1rem;
+    box-shadow:0 12px 40px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.03) inset;
+    animation:popup-slide-in 0.28s cubic-bezier(0.34,1.3,0.64,1) forwards;
+    pointer-events:auto;`;
+
+  const acc = next ? ACCESSORIES.find(a => a.id === (MISSIONS.find(m=>m.id===next.id)||{}).accessory) : null;
+
+  popup.innerHTML = `
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),rgba(201,152,42,0.3));border-radius:1.2rem 1.2rem 0 0;"></div>
+    <button onclick="document.getElementById('mission-popup').remove()" style="position:absolute;top:0.6rem;right:0.7rem;background:none;border:none;color:rgba(232,217,188,0.35);font-size:1.1rem;cursor:pointer;line-height:1;padding:0.1rem 0.3rem;border-radius:0.4rem;transition:color 0.15s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(232,217,188,0.35)'">✕</button>
+    <div style="font-size:0.65rem;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.55rem;">💡 Próxima misión</div>
+    ${next ? `
+      <div style="font-family:'Lora',serif;font-size:0.95rem;font-weight:700;color:var(--cream);margin-bottom:0.3rem;">${next.name || next.place}</div>
+      <div style="font-size:0.78rem;color:rgba(232,217,188,0.55);line-height:1.45;margin-bottom:0.55rem;">${next.place}</div>
+      ${acc ? `<div style="display:inline-flex;align-items:center;gap:0.4rem;background:rgba(201,152,42,0.1);border:1px solid rgba(201,152,42,0.2);border-radius:2rem;padding:0.25rem 0.7rem;font-size:0.75rem;color:var(--gold-light);">${acc.emoji} ${acc.name} · <span style="color:var(--sage);">+${acc.xp} XP</span></div>` : ''}
+      <div style="margin-top:0.7rem;">
+        <button onclick="switchSection('map');document.getElementById('mission-popup').remove();" style="background:linear-gradient(135deg,rgba(90,128,66,0.25),rgba(90,128,66,0.15));border:1px solid rgba(90,128,66,0.4);border-radius:0.65rem;padding:0.5rem 0.9rem;color:var(--sage);font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;width:100%;transition:all 0.2s;">
+          🗺️ Ver en el Mapa
+        </button>
+      </div>
+    ` : `<div style="font-size:0.85rem;color:var(--sage);font-weight:600;">🏆 ¡Todas las misiones completadas!</div>`}`;
+
+  document.body.appendChild(popup);
+
+  // Auto-close after 8s
+  setTimeout(() => {
+    const p = document.getElementById('mission-popup');
+    if (p) { p.style.animation = 'popup-slide-out 0.22s ease forwards'; setTimeout(() => p.remove(), 250); }
+  }, 8000);
+}
+
 // ── QR MODAL ──────────────────────────────────────
 function openQRScanner() {
   document.getElementById('qr-modal').style.display = 'flex';
+  switchQRTab('main');
 }
 function closeQRModal() {
   document.getElementById('qr-modal').style.display = 'none';
 }
+function switchQRTab(tab) {
+  ['main','donate'].forEach(t => {
+    const panel = document.getElementById('qrpanel-' + t);
+    const btn   = document.getElementById('qrtab-'   + t);
+    if (!panel || !btn) return;
+    const active = t === tab;
+    panel.style.display = active ? 'block' : 'none';
+    btn.style.color = active ? 'var(--gold-light)' : 'rgba(232,217,188,0.4)';
+    btn.style.borderBottomColor = active ? 'var(--gold)' : 'transparent';
+  });
+}
+function downloadDonateQR() {
+  const src = 'https://res.cloudinary.com/ds4qnoypm/image/upload/v1772975187/SmartSelect_20260308_090455_nfyt6l.png';
+  const a = document.createElement('a');
+  a.href = src; a.download = 'DynoQuest-Donacion-QR.png'; a.target = '_blank';
+  document.body.appendChild(a); a.click(); a.remove();
+  closeQRModal();
+  setTimeout(launchFireworks, 250);
+}
+
+// ── FIREWORKS ─────────────────────────────────────
+function launchFireworks() {
+  const emojis = ['✨','🌟','💫','⭐','🎇','🎆','💥','🌠','🎊','🎉'];
+  const colors = ['#e4b84a','#4ab8c4','#c9982a','#f2ead8','#8a1a36','#5a8042','#ff8888','#88ddff','#ffdd44','#ff9944'];
+
+  // Big thank-you card
+  const card = document.createElement('div');
+  card.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:99998;
+    background:linear-gradient(160deg,rgba(18,12,4,0.97),rgba(28,18,6,0.97));
+    border:2px solid rgba(201,152,42,0.65);border-radius:1.5rem;
+    padding:1.8rem 2.2rem 1.6rem;text-align:center;min-width:250px;
+    box-shadow:0 20px 70px rgba(0,0,0,0.85),0 0 50px rgba(201,152,42,0.22);
+    animation:fw-card-in 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    position:fixed;`;
+  card.innerHTML = `
+    <button onclick="this.closest('[id]').remove()" style="position:absolute;top:0.7rem;right:0.9rem;background:none;border:none;color:rgba(232,217,188,0.4);font-size:1.2rem;cursor:pointer;line-height:1;padding:0.2rem 0.35rem;border-radius:0.4rem;transition:color 0.15s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(232,217,188,0.4)'">✕</button>
+    <div style="font-size:3rem;margin-bottom:0.5rem">💛</div>
+    <div style="font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:var(--gold-light);margin-bottom:0.35rem">¡Gracias!</div>
+    <div style="font-family:'Lora',serif;font-size:0.85rem;color:rgba(232,217,188,0.65);line-height:1.5">Tu apoyo hace grande a DynoQuest<br>y a la cultura de Tarija 🦕🦣</div>`;
+  document.body.appendChild(card);
+  // Auto-dismiss after 7s with fade-out
+  setTimeout(() => {
+    if (!card.parentNode) return;
+    card.style.animation = 'fw-card-out 0.4s ease forwards';
+    setTimeout(() => { if (card.parentNode) card.remove(); }, 420);
+  }, 7000);
+
+  // Particle burst — 70 particles
+  for (let i = 0; i < 70; i++) {
+    const isEmoji = i < 20;
+    const el = document.createElement('div');
+    const angle = (i / 70) * 360 + Math.random() * 5;
+    const dist  = 60 + Math.random() * 200;
+    const dx = Math.cos(angle * Math.PI/180) * dist;
+    const dy = Math.sin(angle * Math.PI/180) * dist - 60;
+    const delay = Math.random() * 0.25;
+    const dur = 0.75 + Math.random() * 0.75;
+    el.style.cssText = `position:fixed;left:50%;top:50%;z-index:99999;pointer-events:none;
+      ${isEmoji
+        ? `font-size:${1.1+Math.random()*1.3}rem;`
+        : `width:${5+Math.random()*9}px;height:${5+Math.random()*9}px;
+           background:${colors[i % colors.length]};
+           border-radius:${Math.random()>0.4?'50%':'3px'};`}
+      transform:translate(-50%,-50%);
+      animation:fw-particle ${dur}s ease-out ${delay}s both;
+      --fdx:${dx}px;--fdy:${dy}px;`;
+    el.textContent = isEmoji ? emojis[i % emojis.length] : '';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (dur + delay) * 1000 + 200);
+  }
+
+  // 3 expanding rings
+  for (let r = 0; r < 3; r++) {
+    const ring = document.createElement('div');
+    ring.style.cssText = `position:fixed;left:50%;top:50%;width:12px;height:12px;
+      border:2.5px solid ${colors[r*3]};border-radius:50%;z-index:99997;pointer-events:none;
+      animation:fw-ring ${0.65+r*0.22}s ease-out ${r*0.12}s both;`;
+    document.body.appendChild(ring);
+    setTimeout(() => ring.remove(), 1400 + r * 300);
+  }
+}
+
 
 // ── LOGOUT ────────────────────────────────────────
 function doLogout() {
@@ -4032,16 +4533,39 @@ function showToast(msg, type) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// ── INIT ──────────────────────────────────────────
+// ── PAGE INIT — SPLASH → SESSION RESTORE ─────────
 (function() {
   loadState();
-  // Start crossfade animations
-  setTimeout(() => {
-    startImageCrossfade('login-img-1', 'login-img-2', 4000);
+  const splash = document.getElementById('screen-splash');
+
+  function showLogin() {
+    const login = document.getElementById('screen-login');
+    if (login) login.classList.add('active');
+    setTimeout(() => {
+      const img = document.getElementById('login-logo-img');
+      const sub = document.getElementById('login-sub-label');
+      if (img) img.style.opacity = '1';
+      if (sub) sub.style.opacity = '1';
+    }, 80);
     startImageCrossfade('hero-img-1', 'hero-img-2', 5000);
-  }, 500);
-  if (localStorage.getItem('urion_state') && state.userName !== 'Explorador') {
-    enterApp();
+  }
+
+  function hideSplash(cb) {
+    splash.classList.add('fade-out');
+    setTimeout(() => { splash.style.display = 'none'; if (cb) cb(); }, 580);
+  }
+
+  const hasSession = localStorage.getItem('urion_state') && state.userName && state.userName !== 'Explorador';
+
+  if (hasSession) {
+    // Show splash briefly then restore last position
+    setTimeout(() => hideSplash(() => {
+      enterApp();
+      startImageCrossfade('hero-img-1', 'hero-img-2', 5000);
+    }), 1400);
+  } else {
+    // New user — show splash then login
+    setTimeout(() => hideSplash(showLogin), 2000);
   }
 })();
 </script>
