@@ -3,201 +3,1685 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1a0a00">
+<meta name="theme-color" content="#0d0a06">
 <title>Urion — Tarija Discovery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="styles.css">
-<script type="module" src="script.js"></script>
 
+<style>
+/* ═══════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════ */
+:root {
+  --bg:         #0d0a06;
+  --bg2:        #140f08;
+  --bg3:        #1a1208;
+  --cream:      #e8d9bc;
+  --gold:       #c9982a;
+  --gold-light: #e4b84a;
+  --sage:       #8fad72;
+  --vine:       #5a8042;
+  --wine:       #8a1a36;
+  --wine2:      #b02548;
+  --sky:        #4ab8c4;
+  --glass:      rgba(255,255,255,0.05);
+  --glass-border: rgba(201,152,42,0.18);
+  --glass-hover:  rgba(201,152,42,0.08);
+  --shadow:     0 8px 32px rgba(0,0,0,0.6);
+  --r:          1rem;
+  --r2:         1.4rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; max-width: 430px;
+  margin: 0 auto;
+  background: var(--bg);
+  color: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════
+   UTILITY
+═══════════════════════════════ */
+.hidden { display: none !important; }
+.screen { display: none; width: 100%; min-height: 100vh; position: relative; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ═══════════════════════════════
+   ANIMATIONS
+═══════════════════════════════ */
+@keyframes float      { 0%,100%{transform:translateY(0)}   50%{transform:translateY(-10px)} }
+@keyframes fadeInUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn     { from{opacity:0} to{opacity:1} }
+@keyframes slideDown  { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideUp    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn    { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+@keyframes shimmer    { 0%,100%{opacity:0.6} 50%{opacity:1} }
+@keyframes pulse-ring { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(2.4);opacity:0} }
+@keyframes spin-slow  { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+@keyframes confetti-fall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+@keyframes sparkle-burst { 0%{transform:translate(-50%,-50%) scale(0);opacity:1} 80%{opacity:1} 100%{transform:translate(-50%,-50%) scale(1.2) translateY(-60px);opacity:0} }
+@keyframes hero-text  { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes stagger-in { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes card-hover { from{transform:translateY(0)} to{transform:translateY(-6px)} }
+@keyframes nav-indicator { from{width:0;opacity:0} to{width:100%;opacity:1} }
+@keyframes pgo-pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+@keyframes scan-line  { 0%{top:0} 100%{top:100%} }
+
+.fade-up-1 { animation: fadeInUp .55s ease both }
+.fade-up-2 { animation: fadeInUp .55s .1s ease both }
+.fade-up-3 { animation: fadeInUp .55s .2s ease both }
+.fade-up-4 { animation: fadeInUp .55s .35s ease both }
+.fade-up-5 { animation: fadeInUp .55s .45s ease both }
+
+/* ═══════════════════════════════
+   GLASSMORPHISM NAVBAR
+═══════════════════════════════ */
+.glass-nav {
+  position: fixed;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  height: 60px;
+  background: rgba(13,10,6,0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(201,152,42,0.15);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  z-index: 9000;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.5);
+  animation: slideDown 0.4s ease;
+}
+
+.glass-nav .nav-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--cream);
+  display: flex; align-items: center; gap: 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+.glass-nav .nav-sections {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.glass-nav .nav-section-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: rgba(232,217,188,0.45);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+  border-radius: 2rem;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.glass-nav .nav-section-btn:hover {
+  color: var(--gold-light);
+  background: rgba(201,152,42,0.1);
+}
+
+.glass-nav .nav-section-btn.active {
+  color: var(--gold-light);
+  background: rgba(201,152,42,0.12);
+}
+
+.glass-nav .nav-section-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 50%;
+  transform: translateX(-50%);
+  width: 16px; height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+  animation: nav-indicator 0.3s ease;
+}
+
+.glass-nav .nav-right {
+  display: flex; align-items: center; gap: 0.6rem;
+}
+
+.nav-xp-badge {
+  display: flex; align-items: center; gap: 0.3rem;
+  background: rgba(201,152,42,0.12);
+  border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 2rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  white-space: nowrap;
+}
+
+.avatar-orb {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vine), var(--wine));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700;
+  color: var(--cream);
+  cursor: pointer;
+  border: 1.5px solid rgba(201,152,42,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.avatar-orb:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(201,152,42,0.4); }
+
+/* ═══════════════════════════════
+   SCREEN: LOGIN
+═══════════════════════════════ */
+#screen-login {
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--bg);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bg-glow {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.login-bg-glow::before {
+  content: '';
+  position: absolute;
+  top: -20%; left: -10%;
+  width: 60%; height: 60%;
+  background: radial-gradient(ellipse, rgba(90,128,66,0.12) 0%, transparent 70%);
+  animation: float 8s ease-in-out infinite;
+}
+.login-bg-glow::after {
+  content: '';
+  position: absolute;
+  bottom: -10%; right: -10%;
+  width: 50%; height: 50%;
+  background: radial-gradient(ellipse, rgba(138,26,54,0.12) 0%, transparent 70%);
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+.logo-dino { font-size: 3.5rem; line-height: 1; margin-bottom: 0.4rem; filter: drop-shadow(0 4px 20px rgba(201,152,42,0.3)); }
+.brand-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.8rem; font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.brand-sub {
+  font-size: 0.75rem; font-weight: 400;
+  color: rgba(201,152,42,0.65);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  margin-top: 0.3rem;
+}
+
+.login-card {
+  width: 100%; max-width: 340px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r2);
+  padding: 1.6rem 1.4rem;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.input-field {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,152,42,0.15);
+  border-radius: 0.75rem;
+  padding: 0.72rem 1rem;
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.input-field::placeholder { color: rgba(232,217,188,0.3); }
+.input-field:focus {
+  border-color: rgba(201,152,42,0.45);
+  background: rgba(201,152,42,0.05);
+  box-shadow: 0 0 0 3px rgba(201,152,42,0.1);
+}
+
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, var(--vine) 0%, var(--gold) 100%);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.78rem 1.2rem;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+  letter-spacing: 0.02em;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+  pointer-events: none;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,152,42,0.35); }
+.btn-primary:active { transform: translateY(0); opacity: 1; }
+
+.btn-secondary {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 0.75rem;
+  padding: 0.72rem 1.2rem;
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.btn-secondary:hover { background: rgba(201,152,42,0.08); border-color: rgba(201,152,42,0.35); transform: translateY(-1px); }
+
+/* ═══════════════════════════════
+   MAIN APP SHELL
+═══════════════════════════════ */
+#screen-app {
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* Sections inside app */
+.app-section {
+  display: none;
+  flex-direction: column;
+  padding-top: 60px; /* navbar height */
+  min-height: 100vh;
+  animation: fadeIn 0.3s ease;
+}
+.app-section.active { display: flex; }
+
+/* ═══════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  height: 64px;
+  background: rgba(13,10,6,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(201,152,42,0.12);
+  display: flex;
+  align-items: center;
+  z-index: 8000;
+  padding: 0 0.5rem;
+}
+
+.nav-tab {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.2rem;
+  background: none; border: none;
+  color: rgba(232,217,188,0.38);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  border-radius: 0.75rem;
+  transition: color 0.2s, background 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  position: relative;
+}
+.nav-tab .tab-icon { font-size: 1.25rem; line-height: 1; transition: transform 0.2s; }
+.nav-tab:hover { color: var(--gold-light); background: rgba(201,152,42,0.06); }
+.nav-tab:hover .tab-icon { transform: scale(1.15); }
+.nav-tab.active { color: var(--gold-light); }
+.nav-tab.active .tab-icon { transform: scale(1.1); }
+.nav-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 50%; transform: translateX(-50%);
+  width: 28px; height: 3px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════
+   SECTION: HOME (dashboard)
+═══════════════════════════════ */
+#sec-home { padding-bottom: 80px; }
+
+.hero-dino-area {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  background: radial-gradient(ellipse at 50% 80%, rgba(90,128,66,0.12) 0%, transparent 65%),
+              radial-gradient(ellipse at 50% 20%, rgba(74,184,196,0.06) 0%, transparent 60%);
+  overflow: hidden;
+}
+.hero-dino-area::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+#dino-canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+.dino-glow {
+  position: absolute;
+  bottom: 12%; left: 50%; transform: translateX(-50%);
+  width: 140px; height: 24px;
+  background: radial-gradient(ellipse, rgba(74,184,196,0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+.dino-name-badge {
+  position: absolute; bottom: 14%; left: 50%; transform: translateX(-50%);
+  background: rgba(13,10,6,0.7);
+  border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 2rem;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--gold-light);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  z-index: 2;
+}
+.dino-tap-hint {
+  position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
+  font-size: 0.65rem; color: rgba(232,217,188,0.3);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 2;
+  animation: shimmer 3s ease-in-out infinite;
+}
+.dino-sparkle {
+  position: absolute;
+  font-size: 1.1rem;
+  animation: sparkle-burst 1.4s ease forwards;
+  pointer-events: none; z-index: 10;
+}
+
+.equipped-preview {
+  display: flex; gap: 0.4rem;
+  padding: 0.4rem 1rem 0.6rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-height: 68px;
+}
+.equip-slot-badge {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.2rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.12);
+  border-radius: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  min-width: 64px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.equip-slot-badge:hover { background: var(--glass-hover); border-color: rgba(201,152,42,0.3); transform: translateY(-2px); }
+.equip-slot-badge.filled { border-color: rgba(201,152,42,0.25); }
+.esb-icon { font-size: 1.3rem; line-height: 1; }
+.esb-label { font-size: 0.6rem; color: var(--cream); font-weight: 500; text-align: center; }
+.esb-empty { font-size: 0.55rem; color: rgba(232,217,188,0.3); }
+
+.scan-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  width: calc(100% - 2rem);
+  margin: 0 1rem;
+  background: linear-gradient(135deg, rgba(138,26,54,0.6), rgba(201,152,42,0.4));
+  border: 1px solid rgba(201,152,42,0.3);
+  border-radius: 1rem;
+  padding: 0.85rem 1.5rem;
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.92rem; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 20px rgba(138,26,54,0.25);
+}
+.scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(138,26,54,0.4); }
+
+.vine-divider {
+  text-align: center;
+  color: rgba(201,152,42,0.3);
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  padding: 0.75rem 0;
+  position: relative;
+}
+.vine-divider::before, .vine-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%; width: 38%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201,152,42,0.2));
+}
+.vine-divider::before { left: 0; }
+.vine-divider::after { right: 0; background: linear-gradient(to left, transparent, rgba(201,152,42,0.2)); }
+
+.section-title {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0 1rem 0.75rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 0.02em;
+}
+
+/* Accessory filter */
+.acc-filter-row {
+  display: flex; gap: 0.4rem;
+  padding: 0 1rem 0.75rem;
+  overflow-x: auto; scrollbar-width: none;
+}
+.acc-filter-btn {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(201,152,42,0.12);
+  border-radius: 2rem;
+  padding: 0.3rem 0.75rem;
+  color: rgba(232,217,188,0.5);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem; font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.acc-filter-btn:hover { border-color: rgba(201,152,42,0.3); color: var(--cream); }
+.acc-filter-btn.active {
+  background: rgba(201,152,42,0.12);
+  border-color: rgba(201,152,42,0.35);
+  color: var(--gold-light);
+}
+
+/* Accessory grid */
+.acc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0 1rem;
+}
+.acc-slot {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.25rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-radius: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+.acc-slot::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent);
+  pointer-events: none;
+}
+.acc-slot:hover { transform: translateY(-3px); border-color: rgba(201,152,42,0.3); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.acc-slot.unlocked { border-color: rgba(201,152,42,0.2); }
+.acc-slot.unlocked:hover { border-color: rgba(201,152,42,0.5); background: rgba(201,152,42,0.06); }
+.acc-slot.equipped { border-color: var(--gold); background: rgba(201,152,42,0.1); box-shadow: 0 0 12px rgba(201,152,42,0.2); }
+.acc-slot.locked { opacity: 0.5; }
+
+.acc-cat-tag {
+  position: absolute; top: 4px; right: 5px;
+  font-size: 0.7rem; opacity: 0.5;
+}
+.acc-emoji { font-size: 1.6rem; }
+.acc-label { font-size: 0.6rem; font-weight: 500; color: rgba(232,217,188,0.7); text-align: center; line-height: 1.2; padding: 0 0.2rem; }
+.equipped-badge {
+  position: absolute; top: 4px; left: 5px;
+  background: var(--gold);
+  color: #0d0a06; width: 14px; height: 14px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.55rem; font-weight: 700;
+}
+.lock-icon { position: absolute; bottom: 6px; right: 6px; font-size: 0.75rem; opacity: 0.5; }
+
+.next-mission-hint {
+  margin: 0.75rem 1rem 0;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-left: 2px solid rgba(201,152,42,0.3);
+  border-radius: var(--r);
+}
+
+/* ═══════════════════════════════
+   SECTION: HERO / LANDING
+═══════════════════════════════ */
+#sec-hero {
+  padding-bottom: 80px;
+  overflow: hidden;
+}
+
+.hero-banner {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 2rem 1.5rem;
+  overflow: hidden;
+}
+.hero-banner-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(90,128,66,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(138,26,54,0.2) 0%, transparent 45%),
+    radial-gradient(ellipse at 60% 80%, rgba(74,184,196,0.1) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(13,10,6,0.2) 0%, rgba(13,10,6,0.85) 100%);
+  z-index: 0;
+}
+.hero-banner-pattern {
+  position: absolute; inset: 0; z-index: 0; opacity: 0.06;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(201,152,42,0.3) 0px, rgba(201,152,42,0.3) 1px, transparent 1px, transparent 20px),
+    repeating-linear-gradient(-45deg, rgba(201,152,42,0.3) 0px, rgba(201,152,42,0.3) 1px, transparent 1px, transparent 20px);
+}
+.hero-banner-float {
+  position: absolute;
+  font-size: 4rem; opacity: 0.06;
+  animation: float 7s ease-in-out infinite;
+}
+
+.hero-content { position: relative; z-index: 1; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: rgba(201,152,42,0.12);
+  border: 1px solid rgba(201,152,42,0.25);
+  border-radius: 2rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.68rem; font-weight: 600;
+  color: var(--gold-light);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 0.8rem;
+  animation: hero-text 0.8s ease both;
+}
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.8rem; font-weight: 700;
+  color: var(--cream);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.6rem;
+  animation: hero-text 0.8s 0.1s ease both;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--gold-light);
+}
+.hero-subtitle {
+  font-size: 0.9rem; font-weight: 400;
+  color: rgba(232,217,188,0.65);
+  line-height: 1.5;
+  margin-bottom: 1.4rem;
+  animation: hero-text 0.8s 0.2s ease both;
+}
+.hero-actions {
+  display: flex; gap: 0.6rem;
+  animation: hero-text 0.8s 0.3s ease both;
+}
+.hero-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 0.75rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  letter-spacing: 0.02em;
+}
+.hero-btn-primary {
+  background: linear-gradient(135deg, var(--vine), var(--gold));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(90,128,66,0.3);
+}
+.hero-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(90,128,66,0.4); }
+.hero-btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: var(--cream);
+  border: 1px solid rgba(201,152,42,0.2);
+}
+.hero-btn-secondary:hover { background: rgba(201,152,42,0.1); border-color: rgba(201,152,42,0.4); transform: translateY(-2px); }
+
+/* Stats strip */
+.stats-strip {
+  display: flex;
+  padding: 1rem;
+  gap: 0.5rem;
+}
+.stat-pill {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+.stat-pill-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 700;
+  color: var(--gold-light);
+}
+.stat-pill-lbl {
+  font-size: 0.62rem; font-weight: 500;
+  color: rgba(232,217,188,0.45);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* ═══════════════════════════════
+   SECTION: MAP
+═══════════════════════════════ */
+#sec-map {
+  padding-bottom: 64px;
+}
+
+.map-header-bar {
+  padding: 1rem 1rem 0.75rem;
+  background: var(--bg2);
+  border-bottom: 1px solid rgba(201,152,42,0.08);
+}
+.map-header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 0.5rem;
+}
+.map-legend {
+  display: flex; gap: 0.75rem; flex-wrap: wrap;
+  font-size: 0.68rem; color: rgba(232,217,188,0.5);
+}
+.map-legend-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 3px;
+}
+
+#map-container {
+  flex: 1;
+  position: relative;
+}
+#tarija-map {
+  width: 100%;
+  height: calc(100vh - 60px - 64px - 88px);
+  min-height: 380px;
+}
+
+/* Custom leaflet popup */
+.leaflet-popup-content-wrapper {
+  background: rgba(20,15,8,0.95) !important;
+  border: 1px solid rgba(201,152,42,0.25) !important;
+  border-radius: 1rem !important;
+  color: var(--cream) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content { margin: 0 !important; padding: 0.9rem 1rem !important; }
+.leaflet-popup-tip-container { display: none !important; }
+.map-popup-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; font-weight: 700; color: var(--cream);
+  margin-bottom: 0.35rem;
+}
+.map-popup-desc { font-size: 0.75rem; color: rgba(232,217,188,0.55); line-height: 1.4; margin-bottom: 0.6rem; }
+.map-popup-btn {
+  display: block; width: 100%;
+  background: linear-gradient(135deg, rgba(90,128,66,0.6), rgba(201,152,42,0.4));
+  border: 1px solid rgba(201,152,42,0.3);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem; font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.map-popup-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.map-popup-btn.reward-btn { background: linear-gradient(135deg, rgba(138,26,54,0.7), rgba(201,152,42,0.4)); }
+
+/* Pokémon GO markers */
+.pgo-marker {
+  width: 48px; height: 58px;
+  display: flex; flex-direction: column; align-items: center;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.6));
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.pgo-marker:hover { transform: scale(1.1) translateY(-2px); }
+.pgo-marker-inner {
+  width: 44px; height: 44px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  position: relative;
+}
+.pgo-marker-inner::after {
+  content: '';
+  position: absolute; bottom: -10px; left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+.pgo-marker.available .pgo-marker-inner { background: linear-gradient(135deg, #2d7a4a, #4ab85a); }
+.pgo-marker.available .pgo-marker-inner::after { border-top: 10px solid #2d7a4a; }
+.pgo-marker.reward .pgo-marker-inner {
+  background: linear-gradient(135deg, #8a1a36, #c0304e);
+  animation: pgo-pulse 1.8s ease-in-out infinite;
+}
+.pgo-marker.reward .pgo-marker-inner::after { border-top: 10px solid #8a1a36; }
+.pgo-marker.completed .pgo-marker-inner { background: linear-gradient(135deg, #444, #666); }
+.pgo-marker.completed .pgo-marker-inner::after { border-top: 10px solid #444; }
+
+/* ═══════════════════════════════
+   SECTION: EXPLORE (Places)
+═══════════════════════════════ */
+#sec-explore {
+  padding-bottom: 80px;
+}
+
+.explore-header {
+  padding: 1.2rem 1rem 0.75rem;
+}
+
+.explore-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0 1rem;
+}
+
+.explore-card {
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  animation: fadeInUp 0.5s ease both;
+}
+.explore-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  border-color: rgba(201,152,42,0.3);
+}
+.explore-card:active { transform: translateY(-2px); }
+
+.explore-card-img {
+  width: 100%;
+  height: 110px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.8rem;
+  position: relative;
+  overflow: hidden;
+}
+.explore-card-img::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(13,10,6,0.7) 100%);
+}
+
+/* Category color schemes */
+.explore-card.vinedo .explore-card-img { background: linear-gradient(135deg, rgba(90,14,40,0.6), rgba(138,26,54,0.4)); }
+.explore-card.paisaje .explore-card-img { background: linear-gradient(135deg, rgba(28,65,28,0.7), rgba(90,128,66,0.4)); }
+.explore-card.cultural .explore-card-img { background: linear-gradient(135deg, rgba(100,70,10,0.6), rgba(201,152,42,0.3)); }
+.explore-card.turistico .explore-card-img { background: linear-gradient(135deg, rgba(20,50,80,0.6), rgba(74,184,196,0.3)); }
+
+.explore-card-body { padding: 0.7rem 0.75rem; }
+.explore-card-tag {
+  font-size: 0.58rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2rem;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+}
+.explore-card.vinedo .explore-card-tag { background: rgba(138,26,54,0.2); color: #e07090; }
+.explore-card.paisaje .explore-card-tag { background: rgba(90,128,66,0.2); color: #8fad72; }
+.explore-card.cultural .explore-card-tag { background: rgba(201,152,42,0.15); color: var(--gold-light); }
+.explore-card.turistico .explore-card-tag { background: rgba(74,184,196,0.15); color: var(--sky); }
+
+.explore-card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--cream);
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+.explore-card-desc {
+  font-size: 0.68rem;
+  color: rgba(232,217,188,0.5);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.explore-card-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid rgba(201,152,42,0.08);
+  font-size: 0.65rem; font-weight: 600;
+  color: rgba(201,152,42,0.6);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  transition: color 0.2s;
+}
+.explore-card:hover .explore-card-cta { color: var(--gold-light); }
+
+/* Category filter for explore */
+.cat-filter-row {
+  display: flex; gap: 0.4rem;
+  padding: 0 1rem 0.75rem;
+  overflow-x: auto; scrollbar-width: none;
+}
+.cat-filter-btn {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-radius: 2rem;
+  padding: 0.3rem 0.8rem;
+  color: rgba(232,217,188,0.5);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem; font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.cat-filter-btn:hover { border-color: rgba(201,152,42,0.25); color: var(--cream); }
+.cat-filter-btn.active {
+  background: rgba(201,152,42,0.1);
+  border-color: rgba(201,152,42,0.3);
+  color: var(--gold-light);
+}
+
+/* ═══════════════════════════════
+   SECTION: MISSIONS (places)
+═══════════════════════════════ */
+#sec-places {
+  padding-bottom: 80px;
+}
+
+.mission-card {
+  margin: 0 1rem 0.75rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-radius: 1rem;
+  padding: 0.95rem 1rem;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  animation: slideUp 0.4s ease both;
+}
+.mission-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.35); border-color: rgba(201,152,42,0.2); }
+.mission-card.completed { border-left: 2px solid rgba(90,128,66,0.5); opacity: 0.75; }
+.mission-card.active-mission { border-left: 2px solid rgba(201,152,42,0.6); }
+
+.mission-place { font-size: 0.68rem; font-weight: 600; color: var(--sage); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+.mission-name { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 700; color: var(--cream); margin-bottom: 0.3rem; }
+.mission-desc { font-size: 0.78rem; color: rgba(232,217,188,0.5); line-height: 1.45; margin-bottom: 0.7rem; }
+.mission-reward { font-size: 0.72rem; color: var(--gold); margin-bottom: 0.65rem; }
+.mission-actions { display: flex; gap: 0.5rem; }
+.btn-scan-mission {
+  flex: 1; background: rgba(138,26,54,0.3); border: 1px solid rgba(138,26,54,0.4);
+  border-radius: 0.6rem; padding: 0.5rem 0.5rem;
+  color: var(--cream); font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s ease; text-align: center;
+}
+.btn-scan-mission:hover { background: rgba(138,26,54,0.5); transform: translateY(-1px); }
+.btn-share {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(201,152,42,0.15);
+  border-radius: 0.6rem; padding: 0.5rem 0.75rem;
+  color: rgba(232,217,188,0.6); font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem; font-weight: 500; cursor: pointer;
+  transition: all 0.2s ease; text-align: center;
+}
+.btn-share:hover { background: rgba(201,152,42,0.08); color: var(--cream); transform: translateY(-1px); }
+.badge-completed {
+  font-size: 0.72rem; color: var(--sage); font-weight: 500;
+  padding: 0.4rem 0;
+}
+
+/* ═══════════════════════════════
+   SECTION: ABOUT/PROFILE
+═══════════════════════════════ */
+#sec-about {
+  padding-bottom: 80px;
+}
+
+.profile-hero-card {
+  margin: 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.12);
+  border-radius: 1.2rem;
+  padding: 1.4rem 1rem 1rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.profile-hero-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--vine), var(--gold), var(--wine));
+}
+
+.stat-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0 1rem 1rem;
+}
+.stat-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.1);
+  border-radius: 0.9rem;
+  padding: 0.8rem 0.5rem;
+  text-align: center;
+}
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; color: var(--gold-light); }
+.stat-lbl { font-size: 0.62rem; font-weight: 500; color: rgba(232,217,188,0.45); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.xp-bar-container { margin: 0 1rem 1rem; }
+.xp-bar-track {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--vine), var(--gold));
+  border-radius: 4px;
+  transition: width 0.6s ease;
+  position: relative;
+}
+.xp-bar-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 20px;
+  background: rgba(255,255,255,0.3);
+  animation: shimmer 1.5s infinite;
+}
+
+.wallet-card {
+  margin: 0 1rem 0.6rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,152,42,0.12);
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  position: relative;
+  transition: all 0.2s;
+}
+.wallet-card.used { opacity: 0.5; }
+.wallet-card:hover { border-color: rgba(201,152,42,0.25); }
+.wc-pct { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+.wc-place { font-size: 0.82rem; font-weight: 600; color: var(--cream); }
+.wc-type { font-size: 0.7rem; color: rgba(232,217,188,0.45); margin-top: 0.1rem; }
+.wc-code {
+  font-family: monospace; font-size: 0.85rem; font-weight: 700;
+  color: var(--gold); letter-spacing: 0.08em;
+  background: rgba(201,152,42,0.08); border-radius: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  margin: 0.5rem 0 0.25rem;
+  cursor: pointer; display: inline-block;
+  transition: background 0.2s;
+}
+.wc-code:hover { background: rgba(201,152,42,0.15); }
+.wc-expires { font-size: 0.66rem; color: rgba(232,217,188,0.35); }
+.wc-use-btn {
+  position: absolute; top: 0.7rem; right: 0.8rem;
+  background: rgba(90,128,66,0.15); border: 1px solid rgba(90,128,66,0.3);
+  border-radius: 0.5rem; padding: 0.2rem 0.55rem;
+  font-size: 0.65rem; font-weight: 600;
+  color: var(--sage); cursor: pointer;
+  transition: all 0.2s;
+}
+.wc-use-btn:hover { background: rgba(90,128,66,0.25); }
+.wc-used-badge {
+  position: absolute; top: 0.7rem; right: 0.8rem;
+  font-size: 0.65rem; color: rgba(232,217,188,0.3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* ═══════════════════════════════
+   AR SCREEN
+═══════════════════════════════ */
+#screen-ar {
+  background: #000;
+  flex-direction: column;
+}
+
+.cam-permission {
+  position: absolute; inset: 0; z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem; padding: 2rem;
+  background: rgba(0,0,0,0.92);
+  text-align: center;
+}
+.cam-icon { font-size: 3rem; animation: float 3s ease-in-out infinite; }
+.cam-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; color: var(--cream); }
+.cam-text { font-size: 0.85rem; color: rgba(232,217,188,0.55); line-height: 1.5; max-width: 300px; }
+
+#ar-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.ar-scan-frame {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -55%);
+  width: 220px; height: 220px;
+  z-index: 10; pointer-events: none;
+}
+.ar-corner {
+  position: absolute;
+  width: 28px; height: 28px;
+  border-color: var(--gold);
+  border-style: solid;
+}
+.ar-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.ar-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.ar-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.ar-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+.ar-scan-line {
+  position: absolute; top: 0; left: 5%; right: 5%;
+  height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 8px rgba(201,152,42,0.6);
+  animation: scan-line 2s linear infinite;
+}
+
+.ar-top-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+  z-index: 20;
+}
+.ar-back-btn {
+  width: 38px; height: 38px;
+  background: rgba(13,10,6,0.7); border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 50%; color: var(--cream); font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all 0.2s; backdrop-filter: blur(8px);
+}
+.ar-back-btn:hover { background: rgba(13,10,6,0.9); }
+.ar-title { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 700; color: var(--cream); }
+.ar-subtitle { font-size: 0.72rem; color: rgba(232,217,188,0.55); }
+.ar-hint {
+  position: absolute; bottom: 45%; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13,10,6,0.75);
+  border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 2rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.72rem; color: rgba(232,217,188,0.7);
+  white-space: nowrap; z-index: 15;
+  backdrop-filter: blur(8px);
+}
+
+.ar-demo-btns {
+  position: absolute; bottom: 80px; left: 0; right: 0;
+  padding: 0 1rem; z-index: 15;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.ar-demo-btn {
+  background: rgba(13,10,6,0.8);
+  border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 0.75rem;
+  padding: 0.65rem 1rem;
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; text-align: center;
+  transition: all 0.2s; backdrop-filter: blur(8px);
+}
+.ar-demo-btn:hover { background: rgba(201,152,42,0.15); border-color: rgba(201,152,42,0.4); }
+.ar-demo-btn.random { border-color: rgba(138,26,54,0.35); }
+.ar-demo-btn.random:hover { background: rgba(138,26,54,0.2); }
+
+/* AR Point overlay */
+.ar-point-container {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 20;
+}
+.ar-point-ring {
+  position: absolute;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  border: 2px solid rgba(138,26,54,0.6);
+  animation: pulse-ring 2s ease-out infinite;
+}
+.ar-point-ring:nth-child(2) { animation-delay: 0.5s; }
+.ar-point-ring:nth-child(3) { animation-delay: 1s; }
+.ar-point-sphere {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(200,100,130,0.9), rgba(138,26,54,0.95));
+  border: 2px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(138,26,54,0.7), 0 0 60px rgba(138,26,54,0.3);
+  animation: pgo-pulse 2s ease-in-out infinite;
+  z-index: 21;
+  transition: transform 0.15s;
+}
+.ar-point-sphere:hover { transform: scale(1.1); }
+.ar-point-label {
+  margin-top: 76px; color: var(--cream);
+  font-size: 0.82rem; font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+.ar-point-place {
+  font-size: 0.72rem; color: rgba(232,217,188,0.6);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  margin-top: 0.2rem;
+}
+.gps-dist-badge {
+  position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+  background: rgba(13,10,6,0.8);
+  border: 1px solid rgba(201,152,42,0.25);
+  border-radius: 2rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.72rem; color: var(--gold-light);
+  backdrop-filter: blur(8px);
+  z-index: 25; white-space: nowrap;
+}
+
+/* ═══════════════════════════════
+   MODALS
+═══════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.75);
+  display: none; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: flex; animation: fadeIn 0.25s ease; }
+
+.modal-card {
+  width: 100%;
+  background: rgba(20,15,8,0.98);
+  border: 1px solid rgba(201,152,42,0.25);
+  border-radius: 1.5rem;
+  padding: 1.8rem 1.4rem;
+  text-align: center;
+  position: relative;
+  animation: scaleIn 0.3s ease;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.8);
+}
+.modal-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--vine), var(--gold), var(--wine));
+  border-radius: 1.5rem 1.5rem 0 0;
+}
+.modal-emoji { font-size: 3.5rem; display: block; margin-bottom: 0.6rem; animation: float 3s ease-in-out infinite; }
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; color: var(--cream); margin-bottom: 0.3rem; }
+.modal-place { font-size: 0.75rem; font-weight: 600; color: var(--sage); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+.modal-desc { font-size: 0.8rem; color: rgba(232,217,188,0.55); line-height: 1.5; margin-bottom: 0.75rem; }
+.xp-gain { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; color: var(--gold-light); margin-bottom: 0.75rem; }
+
+#discount-modal {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(0,0,0,0.8);
+  display: none; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  backdrop-filter: blur(4px);
+}
+#discount-modal.active { display: flex; animation: fadeIn 0.25s ease; }
+
+.discount-card {
+  width: 100%;
+  background: rgba(20,15,8,0.98);
+  border: 1px solid rgba(201,152,42,0.25);
+  border-radius: 1.5rem;
+  padding: 1.8rem 1.4rem;
+  text-align: center;
+  position: relative;
+  animation: scaleIn 0.3s ease;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.8);
+}
+.discount-badge { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.discount-pct { font-family: 'Cormorant Garamond', serif; font-size: 4rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+.discount-label { font-size: 0.85rem; color: rgba(232,217,188,0.5); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.75rem; }
+.discount-where { font-size: 0.72rem; color: rgba(232,217,188,0.4); text-transform: uppercase; letter-spacing: 0.1em; }
+.discount-place-name { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--cream); margin-bottom: 0.75rem; }
+.discount-code {
+  font-family: monospace; font-size: 1.1rem; font-weight: 700;
+  color: var(--gold); letter-spacing: 0.12em;
+  background: rgba(201,152,42,0.1); border: 1px dashed rgba(201,152,42,0.3);
+  border-radius: 0.75rem; padding: 0.6rem 1rem;
+  display: block; margin: 0.6rem 0;
+  cursor: pointer; transition: all 0.2s;
+}
+.discount-code:hover { background: rgba(201,152,42,0.18); }
+.discount-expires { font-size: 0.7rem; color: rgba(232,217,188,0.35); margin-bottom: 0.75rem; }
+
+/* Reward point modal */
+#reward-point-modal {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.8);
+  display: none; align-items: center; justify-content: center;
+  padding: 1.5rem;
+}
+
+/* ═══════════════════════════════
+   TOAST
+═══════════════════════════════ */
+.toast {
+  position: fixed; top: 72px; left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: rgba(20,15,8,0.92);
+  border: 1px solid rgba(201,152,42,0.2);
+  border-radius: 2rem;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--cream);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════
+   CONFETTI
+═══════════════════════════════ */
+.confetti-piece {
+  position: fixed;
+  width: 8px; height: 12px;
+  z-index: 99999;
+  pointer-events: none;
+  border-radius: 2px;
+  animation: confetti-fall 2.5s ease-in forwards;
+}
+
+/* ═══════════════════════════════
+   SCROLL FADE-IN
+═══════════════════════════════ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delays */
+.stagger-1 { transition-delay: 0.05s; }
+.stagger-2 { transition-delay: 0.1s; }
+.stagger-3 { transition-delay: 0.15s; }
+.stagger-4 { transition-delay: 0.2s; }
+.stagger-5 { transition-delay: 0.25s; }
+.stagger-6 { transition-delay: 0.3s; }
+
+/* ═══════════════════════════════
+   MISC
+═══════════════════════════════ */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1rem 0.5rem;
+}
+.section-header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; font-weight: 700; color: var(--cream);
+}
+.section-header-sub { font-size: 0.7rem; color: rgba(232,217,188,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
+
+scrollbar-width: none;
+::-webkit-scrollbar { display: none; }
+</style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════
+<!-- ════════════════════════════════
      SCREEN: LOGIN
-════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <div id="screen-login" class="screen active">
+  <div class="login-bg-glow"></div>
 
-  <!-- Background particles -->
-  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
-    <div style="position:absolute;top:15%;left:10%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(61,90,46,0.15),transparent);animation:float 6s ease-in-out infinite;"></div>
-    <div style="position:absolute;top:60%;right:8%;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(122,30,60,0.15),transparent);animation:float 8s ease-in-out infinite reverse;"></div>
-    <div style="position:absolute;bottom:20%;left:5%;font-size:1.5rem;opacity:0.08;animation:float 5s infinite">🌿</div>
-    <div style="position:absolute;top:25%;right:5%;font-size:1.2rem;opacity:0.06;animation:float 7s infinite reverse">🍇</div>
-  </div>
-
-  <div style="text-align:center;margin-bottom:2rem" class="fade-up fade-up-1">
+  <div style="text-align:center;margin-bottom:2rem" class="fade-up-1">
     <div class="logo-dino">🦕</div>
     <div class="brand-title">Urion</div>
     <div class="brand-sub">Tarija Discovery · Bolivia</div>
   </div>
 
-  <div class="login-card fade-up fade-up-2">
-    <p style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage);font-weight:600;margin-bottom:1.25rem">🎮 Iniciar aventura</p>
-
-    <div style="display:flex;flex-direction:column;gap:0.75rem">
-      <div class="input-group">
-        <span class="input-icon">👤</span>
-        <input class="input-field" id="login-name" type="text" placeholder="Tu nombre explorador" autocomplete="off" required>
-      </div>
-      <div class="input-group">
-        <span class="input-icon">✉️</span>
-        <input class="input-field" id="login-email" type="email" placeholder="Correo electrónico">
-      </div>
-      <div class="input-group">
-        <span class="input-icon">🔐</span>
-        <input class="input-field" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password">
-      </div>
-      <button class="btn-primary btn-login" id="login-btn" onclick="doLogin()" style="margin-top:0.5rem">
-        🚀 Comenzar exploración
+  <div class="login-card fade-up-2">
+    <p style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage);font-weight:600;margin-bottom:1.2rem">Iniciar aventura</p>
+    <div style="display:flex;flex-direction:column;gap:0.65rem">
+      <input class="input-field" id="login-name" type="text" placeholder="Tu nombre explorador" autocomplete="off">
+      <input class="input-field" id="login-email" type="email" placeholder="Correo electrónico">
+      <input class="input-field" id="login-pass" type="password" placeholder="Contraseña">
+      <button class="btn-primary" onclick="doLogin()" style="margin-top:0.2rem">
+        Comenzar exploración →
       </button>
     </div>
-
-    <div style="margin-top:1.2rem;text-align:center;padding-top:1rem;border-top:1px solid rgba(200,169,126,0.1)">
-      <span style="font-size:0.78rem;color:rgba(200,169,126,0.5)">¿Primera vez? </span>
-      <button style="background:none;border:none;font-size:0.78rem;color:var(--sage);cursor:pointer;font-weight:600;transition:all 0.2s;padding:0.4rem 0.8rem;border-radius:0.5rem;margin-left:0.25rem;display:inline-block;border:1px solid rgba(122,158,107,0.3);" onmouseover="this.style.background='rgba(122,158,107,0.15)';this.style.borderColor='rgba(122,158,107,0.6)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(122,158,107,0.3)'" onclick="doDemo()">🎲 Explorar sin cuenta</button>
+    <div style="margin-top:1rem;text-align:center">
+      <span style="font-size:0.75rem;color:rgba(200,169,126,0.45)">¿Primera vez? </span>
+      <span style="font-size:0.75rem;color:var(--sage);cursor:pointer;font-weight:600" onclick="doDemo()">Modo demo →</span>
     </div>
   </div>
 
-  <p style="margin-top:1.5rem;font-size:0.7rem;color:rgba(200,169,126,0.3);text-align:center;max-width:260px" class="fade-up fade-up-4">
+  <p style="margin-top:1.4rem;font-size:0.68rem;color:rgba(200,169,126,0.3);text-align:center;max-width:260px" class="fade-up-4">
     Colecciona accesorios para Rex visitando los lugares históricos y naturales de Tarija
   </p>
 </div>
 
 
-<!-- ═══════════════════════════════════════════
+<!-- ════════════════════════════════
      SCREEN: MAIN APP
-════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <div id="screen-app" class="screen">
 
-  <nav class="glass-navbar" id="main-nav">
-    <div class="nav-brand" onclick="document.getElementById('home').scrollIntoView({behavior:'smooth'})">Urion 🦕</div>
-    <div class="nav-links">
-      <a href="#home" class="nav-link active">🏠 Inicio</a>
-      <a href="#map" class="nav-link">🗺️ Mapa</a>
-      <a href="#explore" class="nav-link">🎒 Explorar</a>
-      <a href="#places" class="nav-link">📍 Lugares</a>
-      <a href="#about" class="nav-link">👤 Perfil</a>
+  <!-- GLASS NAVBAR -->
+  <nav class="glass-nav" id="glass-nav">
+    <div class="nav-brand">Urion <span>🦕</span></div>
+    <div class="nav-sections" id="nav-sections">
+      <button class="nav-section-btn" id="ns-hero"    onclick="switchSection('hero')">Home</button>
+      <button class="nav-section-btn" id="ns-map"     onclick="switchSection('map')">Mapa</button>
+      <button class="nav-section-btn" id="ns-explore" onclick="switchSection('explore')">Explorar</button>
+      <button class="nav-section-btn" id="ns-places"  onclick="switchSection('places')">Misiones</button>
+      <button class="nav-section-btn" id="ns-about"   onclick="switchSection('about')">Perfil</button>
     </div>
-    <div class="nav-actions">
-      <button class="nav-logout-btn" onclick="exitDemoMode()" title="Cerrar sesión">🚪</button>
-      <div class="nav-xp">⭐ <span id="xp-display">0 XP</span></div>
+    <div class="nav-right">
+      <div class="nav-xp-badge">⭐ <span id="xp-display">0 XP</span></div>
+      <div class="avatar-orb" onclick="switchSection('about')">
+        <span id="avatar-initial">?</span>
+      </div>
     </div>
   </nav>
 
-  <main class="app-content">
-    
-    <section id="home" class="app-section fade-in">
-      <div class="hero-container">
-        <div class="hero-text slide-up">
-          <h1 class="hero-title">Descubre Tarija</h1>
-          <p class="hero-subtitle">Explora la historia, cultura y naturaleza del valle chapaco junto a Rex. Colecciona accesorios en realidad aumentada.</p>
-          <div class="hero-buttons">
-            <a href="#map" class="btn-primary" style="text-decoration:none; display:inline-block; text-align:center;">🗺️ Explorar el Mapa</a>
-            <a href="#places" class="btn-secondary" style="text-decoration:none; display:inline-block; text-align:center;">📍 Descubrir Lugares</a>
-          </div>
-        </div>
-        <div class="hero-dino-area slide-up" id="dino-area" onclick="tapDino()">
-          <canvas id="dino-canvas"></canvas>
-          <div class="dino-glow"></div>
-          <div class="dino-tap-hint">✦ toca para interactuar</div>
-        </div>
-      </div>
-    </section>
+  <!-- ─── SECTION: HERO ──────────────────────── -->
+  <section class="app-section active" id="sec-hero">
 
-    <section id="explore" class="app-section fade-in">
-      <div class="section-header">
-        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">🎒 Personaliza tu Aventura</h2>
-        <p style="color:rgba(200,169,126,0.7); margin-bottom: 1rem;">Completa misiones para desbloquear accesorios históricos.</p>
-      </div>
-      
-      <div style="display:flex;gap:0.5rem;padding:0 0 0.75rem;overflow-x:auto;scrollbar-width:none">
-        <button class="acc-filter-btn active" data-cat="all" onclick="activeAccCat='all';renderAccGrid()">Todo</button>
-        <button class="acc-filter-btn" data-cat="hat" onclick="activeAccCat='hat';renderAccGrid()">🎩 Sombrero</button>
-        <button class="acc-filter-btn" data-cat="neck" onclick="activeAccCat='neck';renderAccGrid()">📿 Collar</button>
-        <button class="acc-filter-btn" data-cat="back" onclick="activeAccCat='back';renderAccGrid()">🎒 Espalda</button>
-        <button class="acc-filter-btn" data-cat="weapon" onclick="activeAccCat='weapon';renderAccGrid()">⚔️ Arma</button>
-      </div>
-
-      <div class="acc-grid" id="acc-grid"></div>
-    </section>
-
-    <section id="map" class="app-section fade-in">
-      <div class="section-header">
-        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">🗺️ Mapa Interactivo</h2>
-        <p style="color:rgba(200,169,126,0.7); margin-bottom: 1rem;">Encuentra lugares turísticos y recompensas cercanas.</p>
-      </div>
-      <div id="map-container" class="modern-map-container">
-        <div id="tarija-map"></div>
-      </div>
-    </section>
-
-    <section id="places" class="app-section fade-in">
-      <div class="section-header">
-        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">📍 Catálogo de Destinos</h2>
-        <p style="color:rgba(200,169,126,0.7); margin-bottom: 1rem;">Conoce los sitios más emblemáticos antes de visitarlos.</p>
-      </div>
-      <div class="places-grid" id="places-grid"></div>
-    </section>
-
-    <section id="about" class="app-section fade-in">
-      <div class="section-header">
-        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">👤 Tu Perfil</h2>
-      </div>
-      <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,126,0.12);border-radius:1.25rem;margin-bottom:1.5rem">
-        <div style="font-size:3rem;margin-bottom:0.5rem" id="avatar-initial">🧭</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--cream)" id="profile-name">Explorador</div>
-        <div style="font-size:0.72rem;color:var(--sage);margin-top:0.15rem;letter-spacing:0.1em;text-transform:uppercase" id="profile-mode-label">Modo Demo</div>
-        <div style="font-size:0.8rem;color:rgba(200,169,126,0.6);margin-top:0.5rem">⭐ <span id="profile-xp">0</span> XP</div>
-      </div>
-
-      <div class="profile-stats">
-        <div class="stat-item">
-          <div class="stat-number" id="stat-collected">0</div>
-          <div class="stat-label">Accesorios</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" id="stat-missions">0</div>
-          <div class="stat-label">Misiones</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" id="stat-places">0</div>
-          <div class="stat-label">Lugares</div>
+    <!-- Hero banner -->
+    <div class="hero-banner">
+      <div class="hero-banner-bg"></div>
+      <div class="hero-banner-pattern"></div>
+      <div class="hero-banner-float" style="top:15%;left:8%">🌿</div>
+      <div class="hero-banner-float" style="top:25%;right:10%;animation-delay:-3s">🍇</div>
+      <div class="hero-banner-float" style="top:10%;right:25%;animation-delay:-1.5s;font-size:2.5rem">🦕</div>
+      <div class="hero-content">
+        <div class="hero-tag">📍 Bolivia · Tarija</div>
+        <h1 class="hero-title">Descubre la <em>magia</em> de Tarija</h1>
+        <p class="hero-subtitle">Explora viñedos, cañones, sitios culturales y paisajes únicos. Colecciona accesorios visitando cada lugar.</p>
+        <div class="hero-actions">
+          <button class="hero-btn hero-btn-primary" onclick="switchSection('map')">
+            🗺️ Explorar Mapa
+          </button>
+          <button class="hero-btn hero-btn-secondary" onclick="switchSection('explore')">
+            📍 Descubrir Lugares
+          </button>
         </div>
       </div>
+    </div>
 
-      <button class="btn-secondary" style="width:100%;margin-top:1rem;background:rgba(192,48,78,0.15);border-color:rgba(192,48,78,0.4);" onclick="exitDemoMode()">
-        🚪 Cambiar cuenta
+    <!-- Quick stats -->
+    <div class="stats-strip">
+      <div class="stat-pill scroll-reveal stagger-1">
+        <div class="stat-pill-num">16</div>
+        <div class="stat-pill-lbl">Lugares</div>
+      </div>
+      <div class="stat-pill scroll-reveal stagger-2">
+        <div class="stat-pill-num">16</div>
+        <div class="stat-pill-lbl">Accesorios</div>
+      </div>
+      <div class="stat-pill scroll-reveal stagger-3">
+        <div class="stat-pill-num">1574</div>
+        <div class="stat-pill-lbl">Fundación</div>
+      </div>
+      <div class="stat-pill scroll-reveal stagger-4">
+        <div class="stat-pill-num">1900m</div>
+        <div class="stat-pill-lbl">Altitud</div>
+      </div>
+    </div>
+
+    <!-- Dino 3D -->
+    <div class="section-header">
+      <div class="section-header-title">🦕 Rex te acompaña</div>
+      <div class="section-header-sub">Toca para interactuar</div>
+    </div>
+    <div class="hero-dino-area" id="dino-area" onclick="tapDino()">
+      <canvas id="dino-canvas"></canvas>
+      <div class="dino-glow"></div>
+      <div class="dino-name-badge">Rex · Lv.<span id="dino-level">1</span></div>
+      <div class="dino-tap-hint">✦ toca para interactuar</div>
+    </div>
+
+    <div id="equipped-preview" class="equipped-preview"></div>
+
+    <div style="padding:0.5rem 0 0.75rem">
+      <button class="scan-btn" onclick="openAR()">
+        <span style="font-size:1.2rem">📷</span>
+        Escanear Lugar Turístico
       </button>
-    </section>
+    </div>
 
-  </main>
+    <div class="vine-divider">✦</div>
+
+    <!-- Accesorios compact -->
+    <div class="section-title"><span>🎒</span> Personalizar a Rex</div>
+    <div class="acc-filter-row" id="acc-filter-home">
+      <button class="acc-filter-btn active" data-cat="all"    onclick="activeAccCat='all';renderAccGrid()">Todo</button>
+      <button class="acc-filter-btn"        data-cat="hat"    onclick="activeAccCat='hat';renderAccGrid()">🎩 Sombrero</button>
+      <button class="acc-filter-btn"        data-cat="neck"   onclick="activeAccCat='neck';renderAccGrid()">📿 Collar</button>
+      <button class="acc-filter-btn"        data-cat="back"   onclick="activeAccCat='back';renderAccGrid()">🎒 Espalda</button>
+      <button class="acc-filter-btn"        data-cat="weapon" onclick="activeAccCat='weapon';renderAccGrid()">⚔️ Arma</button>
+    </div>
+    <div class="acc-grid" id="acc-grid"></div>
+
+    <div class="next-mission-hint scroll-reveal" style="margin-bottom:0.75rem">
+      <div style="font-size:0.72rem;color:var(--sage);font-weight:600;margin-bottom:0.3rem">💡 Próxima misión</div>
+      <div style="font-size:0.8rem;color:rgba(200,169,126,0.65)" id="next-mission-hint">Cargando misión...</div>
+    </div>
+
+  </section>
+
+  <!-- ─── SECTION: MAP ──────────────────────── -->
+  <section class="app-section" id="sec-map">
+    <div class="map-header-bar">
+      <div class="map-header-title">🗺️ Mapa Turístico · Tarija</div>
+      <div class="map-legend">
+        <span><span class="map-legend-dot" style="background:#4ab85a"></span>Disponible</span>
+        <span><span class="map-legend-dot" style="background:#c0304e"></span>Recompensa</span>
+        <span><span class="map-legend-dot" style="background:#555"></span>Visitado</span>
+      </div>
+    </div>
+    <div id="map-container">
+      <div id="tarija-map"></div>
+    </div>
+  </section>
+
+  <!-- ─── SECTION: EXPLORE ─────────────────── -->
+  <section class="app-section" id="sec-explore">
+    <div class="explore-header">
+      <div class="hero-tag" style="animation:none">🌄 Descubre Tarija</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--cream);margin-top:0.5rem;line-height:1.2">
+        Lugares que te <em style="color:var(--gold-light)">esperan</em>
+      </h2>
+      <p style="font-size:0.8rem;color:rgba(232,217,188,0.45);margin-top:0.4rem;line-height:1.4">
+        Viñedos, cañones, sitios históricos y paisajes únicos de Bolivia
+      </p>
+    </div>
+
+    <div class="cat-filter-row">
+      <button class="cat-filter-btn active" data-ecat="all"       onclick="filterExplore('all')">Todo</button>
+      <button class="cat-filter-btn"        data-ecat="vinedo"    onclick="filterExplore('vinedo')">🍷 Viñedos</button>
+      <button class="cat-filter-btn"        data-ecat="paisaje"   onclick="filterExplore('paisaje')">🏞 Paisajes</button>
+      <button class="cat-filter-btn"        data-ecat="cultural"  onclick="filterExplore('cultural')">🏛 Cultural</button>
+      <button class="cat-filter-btn"        data-ecat="turistico" onclick="filterExplore('turistico')">📍 Turístico</button>
+    </div>
+
+    <div class="explore-grid" id="explore-grid"></div>
+    <div style="height:1rem"></div>
+  </section>
+
+  <!-- ─── SECTION: PLACES / MISSIONS ──────── -->
+  <section class="app-section" id="sec-places">
+    <div class="section-header">
+      <div>
+        <div class="section-header-title">🗺️ Misiones · Tarija</div>
+        <div class="section-header-sub">Visita lugares para ganar accesorios</div>
+      </div>
+    </div>
+    <div id="missions-list" style="padding:0.5rem 0"></div>
+  </section>
+
+  <!-- ─── SECTION: ABOUT / PROFILE ─────────── -->
+  <section class="app-section" id="sec-about">
+    <div class="section-header">
+      <div class="section-header-title">👤 Tu Perfil Explorador</div>
+    </div>
+
+    <div class="profile-hero-card">
+      <div style="font-size:2.5rem;margin-bottom:0.4rem">🧭</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--cream)" id="profile-name">Explorador</div>
+      <div style="font-size:0.7rem;color:var(--sage);margin-top:0.15rem;letter-spacing:0.1em;text-transform:uppercase" id="profile-mode-label">Modo Demo</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card scroll-reveal stagger-1">
+        <div class="stat-num" id="stat-visits">0</div>
+        <div class="stat-lbl">Lugares</div>
+      </div>
+      <div class="stat-card scroll-reveal stagger-2">
+        <div class="stat-num" id="stat-acc">0</div>
+        <div class="stat-lbl">Accesorios</div>
+      </div>
+      <div class="stat-card scroll-reveal stagger-3">
+        <div class="stat-num" id="stat-xp">0</div>
+        <div class="stat-lbl">XP Total</div>
+      </div>
+    </div>
+
+    <div class="xp-bar-container">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.82rem;color:var(--cream);font-weight:600">Nivel <span id="lvl-num">1</span></span>
+        <span style="font-size:0.72rem;color:var(--sage)" id="xp-progress-text">0 / 100 XP</span>
+      </div>
+      <div class="xp-bar-track">
+        <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="demo-exit-section" style="display:none;margin:0 1rem 1rem">
+      <div style="background:rgba(122,158,107,0.08);border:1px solid rgba(122,158,107,0.2);border-radius:1rem;padding:0.85rem 1rem;margin-bottom:0.6rem">
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--sage);font-weight:600;margin-bottom:0.25rem">Estás en modo demo</div>
+        <div style="font-size:0.78rem;color:rgba(200,169,126,0.6);line-height:1.4">Crea una cuenta para guardar tu progreso y aparecer en el ranking.</div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:0.5rem" onclick="exitDemoMode()">🚀 Crear cuenta real</button>
+      <button class="btn-secondary" onclick="resetGame()">🗑️ Reiniciar demo</button>
+    </div>
+
+    <div id="real-account-section" style="display:none;margin:0 1rem 1rem">
+      <button class="btn-secondary" onclick="resetGame()">🗑️ Reiniciar progreso</button>
+    </div>
+
+    <div style="padding:0 1rem 0.75rem">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem">
+        🎫 Billetera de Descuentos
+        <span id="discount-count-badge" style="background:var(--wine);color:var(--cream);border-radius:2rem;padding:0.1rem 0.45rem;font-size:0.65rem;font-weight:600"></span>
+      </div>
+      <div id="discounts-wallet-list">
+        <div style="text-align:center;padding:1.5rem;color:rgba(200,169,126,0.3);font-size:0.8rem">Sin descuentos todavía. ¡Escanea un lugar turístico!</div>
+      </div>
+    </div>
+
+    <div style="height:0.5rem"></div>
+  </section>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" id="nav-hero"    onclick="switchSection('hero')">
+      <span class="tab-icon">🏠</span><span>Inicio</span>
+    </button>
+    <button class="nav-tab" id="nav-map"     onclick="switchSection('map')">
+      <span class="tab-icon">🗺️</span><span>Mapa</span>
+    </button>
+    <button class="nav-tab" id="nav-explore" onclick="switchSection('explore')">
+      <span class="tab-icon">🌄</span><span>Explorar</span>
+    </button>
+    <button class="nav-tab" id="nav-places"  onclick="switchSection('places')">
+      <span class="tab-icon">📍</span><span>Misiones</span>
+    </button>
+    <button class="nav-tab" id="nav-about"   onclick="switchSection('about')">
+      <span class="tab-icon">👤</span><span>Perfil</span>
+    </button>
+  </nav>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     SCREEN: AR CAMERA
-════════════════════════════════════════════ -->
-<div id="screen-ar" class="screen">
 
-  <!-- Camera permission UI (shown while camera initializes or on error) -->
+<!-- ════════════════════════════════
+     SCREEN: AR CAMERA
+════════════════════════════════ -->
+<div id="screen-ar" class="screen">
   <div id="cam-permission-ui" class="cam-permission">
     <div class="cam-icon">📷</div>
     <div class="cam-title" id="cam-perm-title">Activando cámara AR…</div>
     <div class="cam-text" id="cam-perm-text">Solicitando permiso de cámara para escanear los marcadores en los lugares turísticos de Tarija.</div>
     <button class="btn-primary" style="max-width:260px" id="cam-perm-btn" onclick="startCamera()">Reintentar</button>
-    <button class="btn-secondary" style="max-width:260px" onclick="closeAR()">Cancelar</button>
+    <button class="btn-secondary" style="max-width:260px;margin-top:0.5rem" onclick="closeAR()">Cancelar</button>
   </div>
 
-  <!-- Live camera view -->
   <div id="cam-live-ui" style="display:none;position:relative;width:100%;height:100%">
     <video id="ar-video" autoplay playsinline muted></video>
 
-    <!-- Scan frame overlay -->
     <div class="ar-scan-frame">
       <div class="ar-corner tl"></div>
       <div class="ar-corner tr"></div>
@@ -216,7 +1700,6 @@
 
     <div class="ar-hint" id="ar-hint-text">🎯 Centra el marcador QR en el recuadro</div>
 
-    <!-- POKÉMON GO POINT OVERLAY (shown when launched from map) -->
     <div id="ar-point-overlay" class="hidden">
       <div class="ar-point-container">
         <div style="position:relative;display:flex;align-items:center;justify-content:center;width:120px;height:120px;">
@@ -230,26 +1713,20 @@
       </div>
     </div>
 
-    <!-- GPS distance badge — always rendered, shown/hidden via JS -->
     <div class="gps-dist-badge" id="gps-dist-badge" style="display:none">📡 Calculando...</div>
 
-    <!-- DEMO buttons for testing without physical markers -->
     <div class="ar-demo-btns" id="ar-demo-btns-container">
-      <div style="text-align:center;color:rgba(255,255,255,0.45);font-size:0.72rem;margin-bottom:0.25rem;letter-spacing:0.1em;text-transform:uppercase">— Simulación de escaneo (demo) —</div>
-      <button class="ar-demo-btn" onclick="simulateScan(currentMissionId || 0)">
-        🎩 Simular: Escanear Lugar Actual
-      </button>
-      <button class="ar-demo-btn random" onclick="simulateScan('random')">
-        🎲 Escanear Aleatorio
-      </button>
+      <div style="text-align:center;color:rgba(255,255,255,0.35);font-size:0.68rem;margin-bottom:0.25rem;letter-spacing:0.1em;text-transform:uppercase">— Simulación de escaneo (demo) —</div>
+      <button class="ar-demo-btn" onclick="simulateScan(currentMissionId || 0)">🎩 Simular: Escanear Lugar Actual</button>
+      <button class="ar-demo-btn random" onclick="simulateScan('random')">🎲 Escanear Aleatorio</button>
     </div>
   </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════
+<!-- ════════════════════════════════
      MODAL: UNLOCK REWARD
-════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <div class="modal-overlay" id="unlock-modal">
   <div class="modal-card">
     <span class="modal-emoji" id="modal-emoji">🎩</span>
@@ -257,66 +1734,68 @@
     <div class="modal-place" id="modal-place">Catedral Basílica · Tarija</div>
     <div class="modal-desc" id="modal-desc">Has visitado uno de los lugares más emblemáticos de Tarija.</div>
     <div class="xp-gain" id="modal-xp">+50 XP ⭐</div>
-    <!-- Discount teaser -->
-    <div style="background:rgba(122,30,60,0.2);border:1px solid rgba(192,48,78,0.25);border-radius:0.75rem;padding:0.6rem 0.8rem;margin-bottom:0.75rem;text-align:center;width:100%">
-      <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage)">Bonus desbloqueado</div>
-      <div style="font-size:0.88rem;font-weight:600;color:var(--cream);margin-top:0.15rem" id="modal-discount-teaser">🎁 10% descuento en comercios locales</div>
+    <div style="background:rgba(122,30,60,0.15);border:1px solid rgba(192,48,78,0.2);border-radius:0.75rem;padding:0.55rem 0.8rem;margin-bottom:0.7rem;text-align:center;width:100%">
+      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage)">Bonus desbloqueado</div>
+      <div style="font-size:0.85rem;font-weight:600;color:var(--cream);margin-top:0.15rem" id="modal-discount-teaser">🎁 10% descuento en comercios locales</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:0.6rem;width:100%">
-      <button class="btn-primary" onclick="equipAndDiscount()">
-        ✨ ¡Equipar + Ver Descuento!
-      </button>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%">
+      <button class="btn-primary" onclick="equipAndDiscount()">✨ ¡Equipar + Ver Descuento!</button>
       <button class="btn-secondary" onclick="closeModal()">Solo guardar accesorio</button>
     </div>
   </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════
-     MODAL: DISCOUNT REWARD
-════════════════════════════════════════════ -->
+<!-- ════════════════════════════════
+     MODAL: DISCOUNT
+════════════════════════════════ -->
 <div id="discount-modal">
   <div class="discount-card">
-    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--vine),var(--gold),var(--wine))"></div>
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--vine),var(--gold),var(--wine));border-radius:1.5rem 1.5rem 0 0"></div>
     <div class="discount-badge" id="disc-icon">🎁</div>
     <div class="discount-pct" id="disc-pct">10%</div>
     <div class="discount-label">de descuento</div>
     <div class="discount-where">Válido en</div>
     <div class="discount-place-name" id="disc-place">Restaurante El Viñedo</div>
-    <div id="disc-type-label" style="font-size:0.78rem;color:rgba(200,169,126,0.6);margin-bottom:0.5rem"></div>
-    <div class="discount-expires" id="disc-expires">Válido por 24 horas · Presenta en caja</div>
-    <div class="discount-code" id="disc-code" onclick="copyDiscountCode()" title="Toca para copiar">
-      URION-XXXX
-    </div>
-    <button class="btn-primary" style="width:100%;margin-bottom:0.5rem" onclick="closeDiscountModal()">
-      ¡Usar descuento! 🎉
-    </button>
-    <button class="btn-secondary" style="width:100%" onclick="closeDiscountModal()">
-      Guardar para después
-    </button>
+    <div id="disc-type-label" style="font-size:0.76rem;color:rgba(200,169,126,0.5);margin-bottom:0.4rem"></div>
+    <div class="discount-expires" id="disc-expires">Válido por 48 horas · Presenta en caja</div>
+    <div class="discount-code" id="disc-code" onclick="copyDiscountCode()">URION-XXXX</div>
+    <button class="btn-primary" style="margin-bottom:0.5rem" onclick="closeDiscountModal()">¡Usar descuento! 🎉</button>
+    <button class="btn-secondary" onclick="closeDiscountModal()">Guardar para después</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     MODAL: REWARD POINT CLAIM (Pokémon GO style)
-════════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════
+     MODAL: REWARD POINT
+════════════════════════════════ -->
 <div id="reward-point-modal" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;padding:1.5rem;">
-  <div class="discount-card" style="border-color:rgba(192,48,78,0.5);">
-    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7a1e3c,#c4882f,#7a1e3c)"></div>
-    <div style="font-size:3rem;margin-bottom:0.75rem;animation:pgo-pulse 1.5s infinite">📍</div>
-    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream);margin-bottom:0.3rem">¡Punto Turístico!</div>
-    <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);margin-bottom:0.5rem" id="rp-place-name">Catedral Basílica</div>
-    <div style="font-size:0.82rem;color:rgba(200,169,126,0.65);line-height:1.5;margin-bottom:1rem" id="rp-place-desc">Descubre la historia de este lugar emblemático de Tarija.</div>
-    <div style="background:rgba(122,30,60,0.2);border:1px solid rgba(192,48,78,0.3);border-radius:0.75rem;padding:0.8rem;margin-bottom:1rem">
-      <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage);margin-bottom:0.2rem">Recompensa disponible</div>
-      <div style="font-size:1.1rem;font-weight:700;color:var(--cream)" id="rp-reward-text">🎁 5% de descuento en comercios locales</div>
+  <div class="discount-card" style="border-color:rgba(192,48,78,0.4);">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#7a1e3c,#c4882f,#7a1e3c);border-radius:1.5rem 1.5rem 0 0"></div>
+    <div style="font-size:2.8rem;margin-bottom:0.6rem;animation:pgo-pulse 1.5s infinite">📍</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--cream);margin-bottom:0.25rem">¡Punto Turístico!</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:var(--gold);margin-bottom:0.4rem" id="rp-place-name">Catedral Basílica</div>
+    <div style="font-size:0.78rem;color:rgba(200,169,126,0.6);line-height:1.45;margin-bottom:0.9rem" id="rp-place-desc">Descubre la historia de este lugar emblemático de Tarija.</div>
+    <div style="background:rgba(122,30,60,0.15);border:1px solid rgba(192,48,78,0.25);border-radius:0.75rem;padding:0.7rem;margin-bottom:0.9rem">
+      <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--sage);margin-bottom:0.2rem">Recompensa disponible</div>
+      <div style="font-size:1rem;font-weight:700;color:var(--cream)" id="rp-reward-text">🎁 5% de descuento en comercios locales</div>
     </div>
-    <button class="btn-primary" style="width:100%;margin-bottom:0.5rem;background:linear-gradient(135deg,#7a1e3c,#c0304e)" onclick="claimRewardPoint()">
-      📍 ¡Reclamar recompensa!
-    </button>
-    <button class="btn-secondary" style="width:100%" onclick="closeRewardPointModal()">
-      Ver después
-    </button>
+    <button class="btn-primary" style="margin-bottom:0.5rem;background:linear-gradient(135deg,#7a1e3c,#c0304e)" onclick="claimRewardPoint()">📍 ¡Reclamar recompensa!</button>
+    <button class="btn-secondary" onclick="closeRewardPointModal()">Ver después</button>
+  </div>
+</div>
+
+<!-- Explore Detail Modal -->
+<div id="explore-modal" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.82);display:none;align-items:flex-end;justify-content:center;padding:0;">
+  <div id="explore-modal-card" style="width:100%;max-width:430px;background:rgba(20,15,8,0.98);border:1px solid rgba(201,152,42,0.2);border-top-left-radius:1.5rem;border-top-right-radius:1.5rem;padding:1.6rem 1.3rem 2rem;animation:slideUp 0.3s ease;">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 1.2rem"></div>
+    <div style="font-size:2.5rem;text-align:center;margin-bottom:0.5rem" id="em-emoji">🍇</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--cream);text-align:center;margin-bottom:0.25rem" id="em-name">Viñedos Kohlberg</div>
+    <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--sage);text-align:center;margin-bottom:0.75rem" id="em-cat">Viñedos</div>
+    <div style="font-size:0.82rem;color:rgba(232,217,188,0.6);line-height:1.55;text-align:center;margin-bottom:1rem" id="em-desc">Descripción del lugar...</div>
+    <div style="background:rgba(201,152,42,0.06);border:1px solid rgba(201,152,42,0.12);border-radius:0.9rem;padding:0.75rem;margin-bottom:1rem" id="em-reward"></div>
+    <button class="btn-primary" id="em-scan-btn" onclick="closeExploreModal();openAR()">📷 Escanear este lugar</button>
+    <button class="btn-secondary" style="margin-top:0.5rem" onclick="closeExploreModal()">Cerrar</button>
   </div>
 </div>
 
@@ -324,5 +1803,1504 @@
 <div class="toast" id="toast"></div>
 
 
+<!-- ════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── DATA ─────────────────────────────────────────
+const ACCESSORIES = [
+  { id:0,  emoji:'🎩', name:'Sombrero Chapaco',    cat:'hat',   place:'Catedral Basílica',         xp:50,  desc:'El icónico sombrero negro del valle tarijeño, símbolo chapaco por excelencia.',    color:'#2a0f05' },
+  { id:1,  emoji:'👑', name:'Corona de Uvas',       cat:'hat',   place:'Viñedos Kohlberg',           xp:60,  desc:'Corona tejida con los mejores racimos del Valle Central. ¡El rey del vino!',       color:'#5a0e2a' },
+  { id:2,  emoji:'⛑️', name:'Casco del Explorador', cat:'hat',   place:'Cañón del Angosto',          xp:55,  desc:'Casco de expedicionista para adentrarse en los cañones rojos del Angosto.',        color:'#8B6914' },
+  { id:3,  emoji:'🪖', name:'Yelmo del Héroe',      cat:'hat',   place:'San Lorenzo',                xp:65,  desc:'El yelmo de Esteban Arze, héroe de la Batalla de la Tablada de 1817.',            color:'#3a3a2a' },
+  { id:4,  emoji:'🌿', name:'Collar de Ceibo',       cat:'neck',  place:'Parque Chapaco',             xp:40,  desc:'Flores del árbol nacional de Bolivia, tejidas en un collar natural.',              color:'#3d5a2e' },
+  { id:5,  emoji:'📿', name:'Collar de Barro',       cat:'neck',  place:'Casa Dorada',                xp:45,  desc:'Artesanía tarijeña de cerámica. Cada pieza lleva 5 siglos de historia.',           color:'#c8a97e' },
+  { id:6,  emoji:'⛪', name:'Medalla de San Roque',  cat:'neck',  place:'San Lorenzo',                xp:65,  desc:'Medalla del patrono de los caminantes. Protege a los exploradores del valle.',     color:'#c4882f' },
+  { id:7,  emoji:'🦴', name:'Collar de Fósil',       cat:'neck',  place:'Museo Paleontológico',       xp:80,  desc:'Réplica de un hueso de mastodonte. Única joya de 11,000 años de antigüedad.',     color:'#8ab4c2' },
+  { id:8,  emoji:'🍇', name:'Mochila Viñera',        cat:'back',  place:'Viñedos Kohlberg',           xp:60,  desc:'Mochila de vendimia cargada con los mejores racimos del Valle Central.',          color:'#7a1e3c' },
+  { id:9,  emoji:'🌅', name:'Capa del Portillo',     cat:'back',  place:'Mirador El Portillo',        xp:70,  desc:'Capa color amanecer, tejida con los colores que pinta el sol sobre el valle.',    color:'#c4882f' },
+  { id:10, emoji:'🦋', name:'Alas Mariposa',         cat:'back',  place:'Cañón del Angosto',          xp:55,  desc:'Réplica de las 200 especies de mariposas del Angosto. ¡Rex puede volar!',        color:'#7a9e6b' },
+  { id:11, emoji:'🏹', name:'Carcaj del Explorador', cat:'back',  place:'Mirador El Portillo',        xp:70,  desc:'Carcaj lleno de flechas para explorar los cuatro puntos del horizonte tarijeño.',  color:'#4a2c1a' },
+  { id:12, emoji:'🏺', name:'Urna de Barro',         cat:'weapon',place:'Casa Dorada',                xp:45,  desc:'Vasija de cerámica tarijeña del siglo XVII. Arte que Rex porta con orgullo.',     color:'#c8a97e' },
+  { id:13, emoji:'⚔️', name:'Espada de la Tablada',  cat:'weapon',place:'San Lorenzo',                xp:65,  desc:'Réplica de la espada usada en la Batalla de la Tablada. ¡Honor chapaco!',        color:'#888888' },
+  { id:14, emoji:'🎸', name:'Charango Tarijeño',      cat:'weapon',place:'Parque Chapaco',             xp:40,  desc:'El charango chapaco, instrumento de los valles. Rex toca folclore boliviano.',    color:'#8B4513' },
+  { id:15, emoji:'🌋', name:'Bastón del Cañón',      cat:'weapon',place:'Cañón del Angosto',          xp:55,  desc:'Bastón de madera de cedro del Angosto. Compañero inseparable del caminante.',    color:'#3d2010' },
+];
+
+const MISSIONS = [
+  { id:0,  name:'La Catedral y sus Secretos',    place:'Catedral Basílica de Tarija',       desc:'Construida entre 1611 y 1691, la Catedral Basílica es el corazón espiritual de Tarija. Sus paredes guardan 400 años de historia colonial y mestiza.', accessory:0,  emoji:'⛪' },
+  { id:1,  name:'Ruta del Vino Chapaco',          place:'Viñedos Kohlberg · Valle Central',  desc:'Los valles de Tarija, a 1900m de altitud, tienen el clima perfecto para las uvas. La familia Kohlberg lleva 3 generaciones produciendo los mejores vinos de Bolivia.', accessory:1, emoji:'🍇' },
+  { id:2,  name:'Verde Profundo del Parque',      place:'Parque Metropolitano Chapaco',      desc:'Pulmón verde de la ciudad, hogar de flora endémica de los yungas tarijeños. Un oasis donde naturaleza y ciudad conviven.', accessory:4, emoji:'🌿' },
+  { id:3,  name:'Arte y Barro Milenario',         place:'Casa Dorada · Centro Histórico',    desc:'La Casa Dorada, joya del art nouveau tarijeño, alberga el Museo de Arte y Artesanías. Aquí convergen 5 siglos de expresión artística.', accessory:5, emoji:'🏺' },
+  { id:4,  name:'El Angosto Mágico',              place:'Cañón del Angosto · 12km',          desc:'Un cañón de roca roja tallado por el río Guadalquivir. Sus paredes de 80 metros forman un corredor natural de biodiversidad única en Bolivia.', accessory:2, emoji:'🦋' },
+  { id:5,  name:'Tierra de Héroes',               place:'San Lorenzo · Valle de Concepción', desc:'A 17km de Tarija, San Lorenzo fue escenario de la Batalla de la Tablada en 1817. Un pueblo que respira historia en cada piedra.', accessory:3, emoji:'🌄' },
+  { id:6,  name:'El Portillo del Amanecer',       place:'Mirador El Portillo · Norte',       desc:'Al norte de la ciudad, este mirador ofrece la panorámica más espectacular de los valles tarijeños al atardecer.', accessory:9, emoji:'🌅' },
+  { id:7,  name:'Tesoros de la Megafauna',        place:'Museo Paleontológico de Tarija',    desc:'Hace 11,000 años, mastodontes y toxodontes habitaban estos valles. El museo alberga la colección de fósiles más importante de Sudamérica.', accessory:7, emoji:'🦴' },
+  { id:8,  name:'Mochila de Vendimia',            place:'Bodega Aranjuez · Valle Central',   desc:'La Bodega Aranjuez, fundada en 1960, produce el singani tarijeño. Tradición vitivinícola de los valles que conquistó Bolivia.', accessory:8, emoji:'🍇' },
+  { id:9,  name:'Alas del Cañón',                 place:'Reserva Biológica Cordillera',      desc:'La reserva alberga más de 200 especies de mariposas endémicas. Sus colores inspiraron generaciones de artesanos tarijeños.', accessory:10, emoji:'🦋' },
+  { id:10, name:'Carcaj del Horizonte',           place:'Cerro Alarache · Mirador',          desc:'Desde los 2400m del Cerro Alarache se ven los cuatro valles de Tarija. Los exploradores llevan aquí su brújula desde tiempos coloniales.', accessory:11, emoji:'🏹' },
+  { id:11, name:'Espada de la Tablada',           place:'Museo de la Batalla · San Lorenzo', desc:'El Museo conmemora el 15 de abril de 1817, cuando las guerrillas chapacas derrotaron al ejército realista. Historia viva del valle.', accessory:13, emoji:'⚔️' },
+  { id:12, name:'Charango de los Valles',         place:'Casa de la Cultura · Tarija',       desc:'La Casa de la Cultura preserva el folclore chapaco: cuecas, bailecitos y erke. El charango es el alma musical del valle.', accessory:14, emoji:'🎸' },
+  { id:13, name:'Medalla del Caminante',          place:'Santuario de la Virgen',            desc:'El Santuario en las afueras de Tarija es meta de peregrinos del altiplano y los valles. San Roque protege a todos los viajeros.', accessory:6, emoji:'⛪' },
+  { id:14, name:'Bastón del Río Bermejo',         place:'Río Bermejo · Sur de Tarija',       desc:'El Bermejo, frontera natural con Argentina, tiene riberas de cedro y arrayán. Sus caminatas son las más míticas de la región.', accessory:15, emoji:'🌊' },
+  { id:15, name:'El Casco del Gran Explorador',   place:'Plaza Luis de Fuentes · Centro',    desc:'La plaza fundacional de Tarija, 1574. Luis de Fuentes y Vargas plantó aquí la primera piedra de la ciudad de los valles.', accessory:2, emoji:'⛑️' },
+];
+
+const MAP_PLACES = [
+  { id:'cat',  name:'Catedral Basílica',          lat:-21.5309, lng:-64.7297, emoji:'⛪', missionId:0,  desc:'Corazón espiritual de Tarija. Construida entre 1611-1691. 400 años de historia colonial.' },
+  { id:'vin',  name:'Viñedos Kohlberg',            lat:-21.5150, lng:-64.7530, emoji:'🍇', missionId:1,  desc:'Los mejores vinos de Bolivia. Valle Central a 1900m de altitud. 3 generaciones de tradición.' },
+  { id:'par',  name:'Parque Metropolitano Chapaco',lat:-21.5260, lng:-64.7180, emoji:'🌿', missionId:2,  desc:'Pulmón verde de la ciudad. Flora y fauna endémica de los yungas tarijeños.' },
+  { id:'cas',  name:'Casa Dorada',                 lat:-21.5332, lng:-64.7312, emoji:'🏺', missionId:3,  desc:'Joya del art nouveau tarijeño. Museo de Arte y Artesanías. 5 siglos de expresión artística.' },
+  { id:'ang',  name:'Cañón del Angosto',           lat:-21.5060, lng:-64.7800, emoji:'🦋', missionId:4,  desc:'Cañón de roca roja de 80 metros tallado por el río Guadalquivir. 200 especies de mariposas.' },
+  { id:'sal',  name:'San Lorenzo',                 lat:-21.4320, lng:-64.7850, emoji:'⚔️', missionId:5,  desc:'Escenario de la Batalla de la Tablada (1817). Tierra del héroe Esteban Arze.' },
+  { id:'por',  name:'Mirador El Portillo',         lat:-21.4980, lng:-64.7100, emoji:'🌅', missionId:6,  desc:'Panorámica espectacular de los valles tarijeños al atardecer.' },
+  { id:'mus',  name:'Museo Paleontológico',         lat:-21.5290, lng:-64.7340, emoji:'🦴', missionId:7,  desc:'Colección de fósiles más importante de Sudamérica. 11,000 años de historia.' },
+  { id:'bod',  name:'Bodega Aranjuez',              lat:-21.5020, lng:-64.7620, emoji:'🍷', missionId:8,  desc:'Fundada en 1960. Produce el singani tarijeño. Tradición vitivinícola de Bolivia.' },
+  { id:'cer',  name:'Reserva Biológica Cordillera', lat:-21.5580, lng:-64.8200, emoji:'🦋', missionId:9,  desc:'200 especies de mariposas endémicas. Sus colores inspiraron generaciones de artesanos.' },
+  { id:'ala',  name:'Cerro Alarache',               lat:-21.4850, lng:-64.7050, emoji:'🏹', missionId:10, desc:'Vista de los cuatro valles desde 2400m. Ruta de los exploradores coloniales.' },
+  { id:'tab',  name:'Museo Batalla Tablada',        lat:-21.4350, lng:-64.7870, emoji:'⚔️', missionId:11, desc:'Conmemora el 15 de abril de 1817. Historia viva de la independencia chapaca.' },
+  { id:'cul',  name:'Casa de la Cultura',           lat:-21.5315, lng:-64.7320, emoji:'🎸', missionId:12, desc:'Preserva el folclore chapaco: cuecas, bailecitos y erke. Alma musical del valle.' },
+  { id:'san',  name:'Santuario de la Virgen',       lat:-21.5200, lng:-64.7500, emoji:'⛪', missionId:13, desc:'Meta de peregrinos del altiplano y los valles.' },
+  { id:'ber',  name:'Río Bermejo',                  lat:-21.7800, lng:-64.6500, emoji:'🌊', missionId:14, desc:'Frontera natural con Argentina. Riberas de cedro y arrayán.' },
+  { id:'pla',  name:'Plaza Luis de Fuentes',        lat:-21.5318, lng:-64.7290, emoji:'🏛️', missionId:15, desc:'Plaza fundacional de Tarija, 1574. Primera piedra de la ciudad de los valles.' },
+];
+
+const PLACE_REWARDS = [
+  { name:'Restaurante El Viñedo',   type:'🍽️ Comida',           pct:10 },
+  { name:'Bodega Kohlberg Store',   type:'🍷 Vino & Souvenirs',  pct:15 },
+  { name:'Artesanías Chapacas',     type:'🎁 Mercancía Oficial', pct:10 },
+  { name:'Parrilla Los Álamos',     type:'🍽️ Comida',           pct:5  },
+  { name:'Tienda Turismo Tarija',   type:'🎁 Mercancía Oficial', pct:10 },
+  { name:'Café del Valle',          type:'☕ Café & Snacks',     pct:5  },
+  { name:'Restaurante Casa Chapaca',type:'🍽️ Comida',           pct:10 },
+  { name:'Heladería El Portillo',   type:'🍦 Postres',           pct:15 },
+];
+
+// Explore places data (extended catalogue)
+const EXPLORE_PLACES = [
+  { id:0,  emoji:'🍇', name:'Viñedos Kohlberg',        cat:'vinedo',    shortDesc:'Valle Central a 1900m de altitud. 3 generaciones de tradición vinatera.',   missionId:1  },
+  { id:1,  emoji:'🍷', name:'Bodega Aranjuez',          cat:'vinedo',    shortDesc:'Singani tarijeño desde 1960. Tradición vitivinícola que conquistó Bolivia.',  missionId:8  },
+  { id:2,  emoji:'🦋', name:'Cañón del Angosto',        cat:'paisaje',   shortDesc:'Cañón de roca roja de 80m tallado por el río Guadalquivir.',                 missionId:4  },
+  { id:3,  emoji:'🌅', name:'Mirador El Portillo',      cat:'paisaje',   shortDesc:'La panorámica más espectacular de los valles tarijeños al atardecer.',       missionId:6  },
+  { id:4,  emoji:'🌿', name:'Parque Chapaco',           cat:'paisaje',   shortDesc:'Pulmón verde de Tarija. Flora y fauna endémica de los yungas bolivianos.',    missionId:2  },
+  { id:5,  emoji:'🏹', name:'Cerro Alarache',           cat:'paisaje',   shortDesc:'Vista de los cuatro valles desde 2400 metros de altitud.',                   missionId:10 },
+  { id:6,  emoji:'⛪', name:'Catedral Basílica',        cat:'cultural',  shortDesc:'Corazón espiritual de Tarija. 400 años de historia colonial y mestiza.',     missionId:0  },
+  { id:7,  emoji:'🏺', name:'Casa Dorada',              cat:'cultural',  shortDesc:'Joya del art nouveau tarijeño. 5 siglos de expresión artística.',            missionId:3  },
+  { id:8,  emoji:'🎸', name:'Casa de la Cultura',       cat:'cultural',  shortDesc:'Folklore chapaco: cuecas, bailecitos y erke. El alma musical del valle.',    missionId:12 },
+  { id:9,  emoji:'⚔️', name:'San Lorenzo',              cat:'cultural',  shortDesc:'Escenario de la Batalla de la Tablada (1817). Pueblo de héroes chapacas.',   missionId:5  },
+  { id:10, emoji:'🦴', name:'Museo Paleontológico',     cat:'turistico', shortDesc:'Mayor colección de fósiles de megafauna en Sudamérica.',                     missionId:7  },
+  { id:11, emoji:'🏛️', name:'Plaza Luis de Fuentes',   cat:'turistico', shortDesc:'Plaza fundacional de Tarija, 1574. Primera piedra de la ciudad.',            missionId:15 },
+  { id:12, emoji:'⛪', name:'Santuario de la Virgen',   cat:'turistico', shortDesc:'Meta de peregrinos del altiplano y los valles tarijeños.',                   missionId:13 },
+  { id:13, emoji:'🌊', name:'Río Bermejo',              cat:'turistico', shortDesc:'Frontera natural con Argentina. Riberas de cedro y caminatas míticas.',      missionId:14 },
+];
+
+// ── STATE ─────────────────────────────────────────
+let state = {
+  userName: 'Explorador',
+  isDemo: true,
+  unlockedAcc: [],
+  equipped: { hat: null, neck: null, back: null, weapon: null },
+  xp: 0,
+  completedMissions: [],
+  discounts: [],
+};
+Object.defineProperty(state, 'equippedAcc', { get() { return Object.values(this.equipped).filter(v=>v!==null); } });
+
+let currentMissionId = 0;
+let pendingUnlockId = null;
+let cameraStream = null;
+
+// ── PERSISTENCE ───────────────────────────────────
+function loadState() {
+  try {
+    const raw = localStorage.getItem('urion_state');
+    if (raw) {
+      const s = JSON.parse(raw);
+      state.userName = s.userName || 'Explorador';
+      state.isDemo   = s.isDemo !== undefined ? s.isDemo : true;
+      state.unlockedAcc = s.unlockedAcc || [];
+      state.xp = s.xp || 0;
+      state.completedMissions = s.completedMissions || [];
+      state.discounts = s.discounts || [];
+      if (s.equipped) {
+        state.equipped = { hat:null, neck:null, back:null, weapon:null, ...s.equipped };
+      } else if (s.equippedAcc) {
+        s.equippedAcc.forEach(id => {
+          const a = ACCESSORIES.find(x => x.id === id);
+          if (a && !state.equipped[a.cat]) state.equipped[a.cat] = id;
+        });
+      }
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('urion_state', JSON.stringify({
+      userName: state.userName, isDemo: state.isDemo,
+      unlockedAcc: state.unlockedAcc, equipped: state.equipped,
+      xp: state.xp, completedMissions: state.completedMissions,
+      discounts: state.discounts
+    }));
+  } catch(e) {}
+}
+
+// ── LOGIN ─────────────────────────────────────────
+function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  if (!name) { showToast('⚠️ Ingresa tu nombre'); return; }
+  state.userName = name;
+  state.isDemo   = false;
+  saveState();
+  enterApp();
+}
+
+function doDemo() {
+  state.userName = 'Turista Demo';
+  state.isDemo   = true;
+  saveState();
+  enterApp();
+}
+
+function exitDemoMode() {
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('login-name').value = state.userName !== 'Turista Demo' ? state.userName : '';
+  showToast('📝 Crea tu cuenta para guardar el progreso');
+}
+
+function enterApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  initApp();
+}
+
+// ── INIT ──────────────────────────────────────────
+function initApp() {
+  loadState();
+  renderAccGrid();
+  renderMissions();
+  renderExploreGrid('all');
+  updateProfileUI();
+  initDino3D();
+  updateEquippedPreview();
+  updateNextMissionHint();
+  initScrollReveal();
+  document.getElementById('avatar-initial').textContent = (state.userName[0] || '?').toUpperCase();
+}
+
+// ── SECTION ROUTING ───────────────────────────────
+let mapInitialized = false;
+let currentSection = 'hero';
+
+function switchSection(sec) {
+  if (currentSection === sec) return;
+
+  // Hide all sections with fade
+  document.querySelectorAll('.app-section').forEach(s => {
+    s.classList.remove('active');
+  });
+
+  // Update bottom nav
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-section-btn').forEach(b => b.classList.remove('active'));
+
+  // Show new section
+  const secEl = document.getElementById('sec-' + sec);
+  if (secEl) {
+    secEl.classList.add('active');
+    secEl.scrollTop = 0;
+  }
+
+  // Activate nav buttons
+  const navTab = document.getElementById('nav-' + sec);
+  if (navTab) navTab.classList.add('active');
+  const navSec = document.getElementById('ns-' + sec);
+  if (navSec) navSec.classList.add('active');
+
+  currentSection = sec;
+
+  // Lazy init map
+  if (sec === 'map') {
+    if (!mapInitialized) {
+      mapInitialized = true;
+      setTimeout(() => initTarijaMap(), 80);
+    } else if (tarijaMap) {
+      setTimeout(() => { tarijaMap.invalidateSize(); refreshMapMarkers(); }, 80);
+    }
+  }
+
+  if (sec === 'about') updateProfileUI();
+
+  // Re-run scroll reveals
+  setTimeout(initScrollReveal, 50);
+}
+
+// ── SCROLL REVEAL ─────────────────────────────────
+function initScrollReveal() {
+  const elements = document.querySelectorAll('.scroll-reveal:not(.visible)');
+  if (!elements.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  elements.forEach(el => observer.observe(el));
+}
+
+// ── ACC GRID ──────────────────────────────────────
+let activeAccCat = 'all';
+
+function renderAccGrid() {
+  const grid = document.getElementById('acc-grid');
+  const filtered = activeAccCat === 'all' ? ACCESSORIES : ACCESSORIES.filter(a => a.cat === activeAccCat);
+  const frag = document.createDocumentFragment();
+
+  filtered.forEach(acc => {
+    const unlocked = state.unlockedAcc.includes(acc.id);
+    const equipped  = state.equipped[acc.cat] === acc.id;
+    const div = document.createElement('div');
+    div.className = 'acc-slot' + (unlocked ? (equipped ? ' equipped' : ' unlocked') : ' locked');
+    const catIcon = { hat:'🎩', neck:'📿', back:'🎒', weapon:'⚔️' }[acc.cat];
+    div.innerHTML = `
+      <div class="acc-cat-tag">${catIcon}</div>
+      <span class="acc-emoji">${acc.emoji}</span>
+      <span class="acc-label">${acc.name.split(' ').slice(0,2).join(' ')}</span>
+      ${equipped ? '<div class="equipped-badge">✓</div>' : ''}
+      ${!unlocked ? '<div class="lock-icon">🔒</div>' : ''}
+    `;
+    div.onclick = () => unlocked ? toggleEquip(acc.id) : showToast(`🔒 Visita ${acc.place}`);
+    frag.appendChild(div);
+  });
+
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+
+  document.querySelectorAll('.acc-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.cat === activeAccCat);
+  });
+}
+
+function toggleEquip(id) {
+  const acc = ACCESSORIES.find(a => a.id === id);
+  if (!acc) return;
+  if (state.equipped[acc.cat] === id) {
+    state.equipped[acc.cat] = null;
+    showToast(`${acc.emoji} Desequipado`);
+  } else {
+    state.equipped[acc.cat] = id;
+    const catNames = { hat:'Sombrero', neck:'Collar', back:'Espalda', weapon:'Arma' };
+    showToast(`✨ ${acc.emoji} ${acc.name} equipado!`);
+  }
+  saveState();
+  renderAccGrid();
+  updateEquippedPreview();
+  updateDino3DAccessories();
+}
+
+function updateEquippedPreview() {
+  const container = document.getElementById('equipped-preview');
+  const slots = [
+    { key:'hat',    icon:'🎩', label:'Sombrero' },
+    { key:'neck',   icon:'📿', label:'Collar'   },
+    { key:'back',   icon:'🎒', label:'Espalda'  },
+    { key:'weapon', icon:'⚔️', label:'Arma'     },
+  ];
+  container.innerHTML = slots.map(slot => {
+    const id = state.equipped[slot.key];
+    const acc = id !== null ? ACCESSORIES.find(a => a.id === id) : null;
+    return `<div class="equip-slot-badge ${acc ? 'filled' : ''}" onclick="switchSection('hero');activeAccCat='${slot.key}';renderAccGrid();" title="${slot.label}">
+      <span class="esb-icon">${acc ? acc.emoji : slot.icon}</span>
+      <span class="esb-label">${acc ? acc.name.split(' ')[0] : slot.label}</span>
+      ${acc ? '' : '<span class="esb-empty">vacío</span>'}
+    </div>`;
+  }).join('');
+}
+
+// ── MISSIONS ──────────────────────────────────────
+function renderMissions() {
+  const list = document.getElementById('missions-list');
+  const frag = document.createDocumentFragment();
+  MISSIONS.forEach((m, i) => {
+    const done = state.completedMissions.includes(m.id);
+    const div = document.createElement('div');
+    div.className = 'mission-card scroll-reveal stagger-' + Math.min((i % 6) + 1, 6) + (done ? ' completed' : (i === 0 ? ' active-mission' : ''));
+    div.innerHTML = `
+      <div class="mission-place">${m.emoji} ${m.place}</div>
+      <div class="mission-name">${m.name}</div>
+      <div class="mission-desc">${m.desc}</div>
+      <div class="mission-reward">🎁 ${ACCESSORIES[m.accessory].emoji} ${ACCESSORIES[m.accessory].name} · +${ACCESSORIES[m.accessory].xp} XP</div>
+      ${done
+        ? `<div class="badge-completed">✅ Completada · +${ACCESSORIES[m.accessory].xp} XP ganados</div>`
+        : `<div class="mission-actions">
+             <button class="btn-scan-mission" onclick="openARFromMission(${m.id})">📷 Ir a escanear</button>
+             <button class="btn-share" onclick="shareMission(${m.id})">📤</button>
+           </div>`}
+    `;
+    frag.appendChild(div);
+  });
+  list.innerHTML = '';
+  list.appendChild(frag);
+  initScrollReveal();
+}
+
+function openARFromMission(missionId) {
+  currentMissionId = missionId;
+  openAR();
+}
+
+function shareMission(missionId) {
+  const m = MISSIONS[missionId];
+  const text = `🦕 ¡Estoy explorando ${m.place} con Urion - Tarija Discovery! ${m.emoji} ${m.name}\n\n#Tarija #Bolivia #UrionDiscovery`;
+  if (navigator.share) {
+    navigator.share({ title: 'Urion – Tarija Discovery', text, url: window.location.href }).catch(() => copyToClipboard(text));
+  } else {
+    copyToClipboard(text);
+  }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('📋 Texto copiado'));
+  } else {
+    showToast('📤 ¡Comparte tu aventura!');
+  }
+}
+
+function updateNextMissionHint() {
+  const next = MISSIONS.find(m => !state.completedMissions.includes(m.id));
+  const hint = document.getElementById('next-mission-hint');
+  if (!hint) return;
+  if (next) {
+    hint.textContent = `Visita ${next.place} para desbloquear ${ACCESSORIES[next.accessory].emoji} ${ACCESSORIES[next.accessory].name}`;
+  } else {
+    hint.textContent = '🎉 ¡Has completado todas las misiones! ¡Eres un experto explorador tarijeño!';
+  }
+}
+
+// ── EXPLORE GRID ──────────────────────────────────
+let currentExploreCat = 'all';
+
+function filterExplore(cat) {
+  currentExploreCat = cat;
+  document.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.ecat === cat));
+  renderExploreGrid(cat);
+}
+
+function renderExploreGrid(cat) {
+  const grid = document.getElementById('explore-grid');
+  const filtered = cat === 'all' ? EXPLORE_PLACES : EXPLORE_PLACES.filter(p => p.cat === cat);
+  const catLabels = { vinedo:'Viñedos', paisaje:'Paisajes', cultural:'Cultural', turistico:'Turístico' };
+  const frag = document.createDocumentFragment();
+
+  filtered.forEach((place, i) => {
+    const done = state.completedMissions.includes(place.missionId);
+    const div = document.createElement('div');
+    div.className = `explore-card ${place.cat}`;
+    div.style.animationDelay = (i * 0.07) + 's';
+    div.innerHTML = `
+      <div class="explore-card-img">${place.emoji}</div>
+      <div class="explore-card-body">
+        <div class="explore-card-tag">${catLabels[place.cat] || place.cat}</div>
+        <div class="explore-card-name">${place.name}</div>
+        <div class="explore-card-desc">${place.shortDesc}</div>
+      </div>
+      <div class="explore-card-cta">
+        <span>${done ? '✅ Visitado' : '📍 Explorar'}</span>
+        <span style="font-size:0.7rem">→</span>
+      </div>
+    `;
+    div.onclick = () => openExploreModal(place);
+    frag.appendChild(div);
+  });
+
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+}
+
+function openExploreModal(place) {
+  const mission = MISSIONS.find(m => m.id === place.missionId);
+  const acc = mission ? ACCESSORIES.find(a => a.id === mission.accessory) : null;
+  const reward = PLACE_REWARDS[place.missionId % PLACE_REWARDS.length];
+  const done = state.completedMissions.includes(place.missionId);
+  const catLabels = { vinedo:'Viñedos', paisaje:'Paisajes', cultural:'Cultural', turistico:'Turístico' };
+
+  document.getElementById('em-emoji').textContent = place.emoji;
+  document.getElementById('em-name').textContent = place.name;
+  document.getElementById('em-cat').textContent = catLabels[place.cat] || place.cat;
+  document.getElementById('em-desc').textContent = mission ? mission.desc : place.shortDesc;
+  document.getElementById('em-reward').innerHTML = acc
+    ? `<div style="font-size:0.68rem;color:var(--sage);font-weight:600;margin-bottom:0.25rem;text-transform:uppercase;letter-spacing:0.08em">Recompensa</div>
+       <div style="font-size:0.85rem;font-weight:600;color:var(--cream)">${acc.emoji} ${acc.name} · +${acc.xp} XP</div>
+       <div style="font-size:0.72rem;color:rgba(232,217,188,0.45);margin-top:0.15rem">🎁 ${reward.pct}% descuento en ${reward.name}</div>`
+    : '';
+
+  const scanBtn = document.getElementById('em-scan-btn');
+  if (done) {
+    scanBtn.textContent = '✅ Misión completada';
+    scanBtn.disabled = true;
+    scanBtn.style.opacity = '0.6';
+  } else {
+    scanBtn.textContent = '📷 Escanear este lugar';
+    scanBtn.disabled = false;
+    scanBtn.style.opacity = '';
+    scanBtn.onclick = () => { closeExploreModal(); openARFromMission(place.missionId); };
+  }
+
+  const modal = document.getElementById('explore-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.opacity = '1', 10);
+}
+
+function closeExploreModal() {
+  document.getElementById('explore-modal').style.display = 'none';
+}
+
+// Click outside explore modal
+document.getElementById('explore-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeExploreModal();
+});
+
+// ── AR ────────────────────────────────────────────
+function openAR() {
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-ar').classList.add('active');
+  hideARPoint();
+  startCamera();
+  startGPS();
+  checkFirstOpenRewardPoint();
+}
+
+function closeAR() {
+  hideARPoint();
+  stopCamera();
+  document.getElementById('screen-ar').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  refreshMapMarkers();
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  const video = document.getElementById('ar-video');
+  if (video) video.srcObject = null;
+}
+
+function startCamera() {
+  const permUI = document.getElementById('cam-permission-ui');
+  const liveUI = document.getElementById('cam-live-ui');
+  const video  = document.getElementById('ar-video');
+  permUI.style.display = 'flex';
+  liveUI.style.display  = 'none';
+  document.getElementById('cam-perm-title').textContent = 'Activando cámara…';
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showCameraError('Tu navegador no soporta acceso a cámara. Usa el modo demo.');
+    return;
+  }
+
+  const constraints = [
+    { video: { facingMode: { exact: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+    { video: { facingMode: 'environment' } },
+    { video: true }
+  ];
+
+  function tryConstraint(index) {
+    if (index >= constraints.length) { showCameraError('No se pudo acceder a la cámara. Usa el modo demo.'); return; }
+    navigator.mediaDevices.getUserMedia(constraints[index])
+      .then(stream => {
+        cameraStream = stream;
+        video.srcObject = stream;
+        const p = video.play();
+        if (p !== undefined) {
+          p.then(() => { permUI.style.display = 'none'; liveUI.style.display = 'block'; showToast('📷 Cámara activa'); })
+           .catch(() => { permUI.style.display = 'none'; liveUI.style.display = 'block'; video.addEventListener('click', () => video.play(), { once: true }); });
+        } else {
+          permUI.style.display = 'none';
+          liveUI.style.display = 'block';
+        }
+      })
+      .catch(err => {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          showCameraError('Permiso de cámara denegado. Actívalo en ajustes del navegador o usa el modo demo.');
+        } else {
+          tryConstraint(index + 1);
+        }
+      });
+  }
+  tryConstraint(0);
+}
+
+function showCameraError(msg) {
+  const permUI = document.getElementById('cam-permission-ui');
+  permUI.style.display = 'flex';
+  document.getElementById('cam-perm-title').textContent = '⚠️ Sin cámara';
+  document.getElementById('cam-perm-text').textContent = msg;
+  document.getElementById('cam-perm-btn').textContent = '🔄 Reintentar';
+  document.getElementById('cam-perm-btn').onclick = startCamera;
+  document.getElementById('cam-live-ui').style.display = 'block';
+  document.getElementById('cam-live-ui').style.zIndex = '-1';
+  permUI.style.background = 'rgba(0,0,0,0.9)';
+}
+
+function simulateScan(missionId) {
+  let id = missionId;
+  if (id === 'random') {
+    const unfinished = MISSIONS.filter(m => !state.completedMissions.includes(m.id));
+    if (!unfinished.length) { showToast('🎉 ¡Completaste todas las misiones!'); return; }
+    id = unfinished[Math.floor(Math.random() * unfinished.length)].id;
+  }
+  if (state.completedMissions.includes(id)) { showToast('✅ Ya completaste esta misión'); return; }
+  pendingUnlockId = id;
+  closeAR();
+  setTimeout(() => showUnlockModal(id), 400);
+}
+
+// ── UNLOCK MODAL ──────────────────────────────────
+function showUnlockModal(missionId) {
+  const m = MISSIONS[missionId];
+  const a = ACCESSORIES.find(acc => acc.id === m.accessory);
+  const reward = PLACE_REWARDS[missionId % PLACE_REWARDS.length];
+  document.getElementById('modal-emoji').textContent = a.emoji;
+  document.getElementById('modal-title').textContent = a.name;
+  document.getElementById('modal-place').textContent = `${m.emoji} ${m.place}`;
+  document.getElementById('modal-desc').textContent = m.desc;
+  document.getElementById('modal-xp').textContent = `+${a.xp} XP ⭐`;
+  document.getElementById('modal-discount-teaser').textContent = `🎁 ${reward.pct}% descuento en ${reward.name}`;
+  document.getElementById('unlock-modal').classList.add('active');
+  spawnConfetti();
+  refreshMapMarkers();
+}
+
+function equipAndDiscount() {
+  const id = pendingUnlockId;
+  equipItem();
+  closeModal();
+  if (id !== null) setTimeout(() => showDiscountModal(id, false), 350);
+}
+
+function equipItem() {
+  if (pendingUnlockId === null) return;
+  const m = MISSIONS[pendingUnlockId];
+  const accId = m.accessory;
+  const acc = ACCESSORIES.find(a => a.id === accId);
+  if (!state.unlockedAcc.includes(accId)) state.unlockedAcc.push(accId);
+  if (!state.completedMissions.includes(pendingUnlockId)) {
+    state.completedMissions.push(pendingUnlockId);
+    state.xp += acc.xp;
+  }
+  state.equipped[acc.cat] = accId;
+  saveState();
+  renderAccGrid();
+  renderMissions();
+  updateProfileUI();
+  updateEquippedPreview();
+  updateDino3DAccessories();
+  updateNextMissionHint();
+  renderExploreGrid(currentExploreCat);
+  showToast(`🎉 ${acc.emoji} ${acc.name} equipado!`);
+  pendingUnlockId = null;
+}
+
+function closeModal() {
+  document.getElementById('unlock-modal').classList.remove('active');
+  if (pendingUnlockId !== null) {
+    const m = MISSIONS[pendingUnlockId];
+    const acc = ACCESSORIES.find(a => a.id === m.accessory);
+    if (!state.unlockedAcc.includes(acc.id)) state.unlockedAcc.push(acc.id);
+    if (!state.completedMissions.includes(pendingUnlockId)) {
+      state.completedMissions.push(pendingUnlockId);
+      state.xp += acc.xp;
+    }
+    saveState();
+    renderAccGrid();
+    renderMissions();
+    updateProfileUI();
+    updateEquippedPreview();
+    updateDino3DAccessories();
+    updateNextMissionHint();
+    renderExploreGrid(currentExploreCat);
+    pendingUnlockId = null;
+  }
+}
+
+// ── PROFILE UI ────────────────────────────────────
+function updateProfileUI() {
+  const xpCurrent = state.xp % 100;
+  const level = Math.floor(state.xp / 100) + 1;
+  const pct = (xpCurrent / 100 * 100).toFixed(0);
+  document.getElementById('xp-display').textContent = `${state.xp} XP`;
+  document.getElementById('dino-level').textContent = level;
+  document.getElementById('profile-name').textContent = state.userName;
+  document.getElementById('profile-mode-label').textContent = state.isDemo ? 'Modo Demo · Explorador' : 'Explorador Chapaco';
+  document.getElementById('stat-visits').textContent = state.completedMissions.length;
+  document.getElementById('stat-acc').textContent = state.unlockedAcc.length;
+  document.getElementById('stat-xp').textContent = state.xp;
+  document.getElementById('lvl-num').textContent = level;
+  document.getElementById('xp-progress-text').textContent = `${xpCurrent} / 100 XP`;
+  document.getElementById('xp-bar').style.width = pct + '%';
+  const demoSec = document.getElementById('demo-exit-section');
+  const realSec = document.getElementById('real-account-section');
+  if (demoSec && realSec) {
+    demoSec.style.display = state.isDemo ? 'block' : 'none';
+    realSec.style.display = state.isDemo ? 'none' : 'block';
+  }
+  renderWallet();
+}
+
+function resetGame() {
+  if (confirm('¿Reiniciar todo el progreso?')) {
+    state.unlockedAcc = [];
+    state.equipped = { hat:null, neck:null, back:null, weapon:null };
+    state.xp = 0;
+    state.completedMissions = [];
+    saveState();
+    renderAccGrid();
+    renderMissions();
+    updateProfileUI();
+    updateEquippedPreview();
+    updateDino3DAccessories();
+    updateNextMissionHint();
+    renderExploreGrid(currentExploreCat);
+    showToast('🔄 Progreso reiniciado');
+  }
+}
+
+// ── DISCOUNT WALLET ───────────────────────────────
+let pendingDiscountData = null;
+
+function generateDiscountCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'URION-';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function addDiscount(missionId, fromPoint) {
+  const m = MISSIONS.find(x => x.id === missionId);
+  const reward = PLACE_REWARDS[missionId % PLACE_REWARDS.length];
+  const disc = {
+    id: Date.now(),
+    code: generateDiscountCode(),
+    place: reward.name,
+    type: reward.type,
+    pct: reward.pct,
+    location: m ? m.place : 'Tarija',
+    ts: Date.now(),
+    used: false,
+    fromPoint: !!fromPoint,
+  };
+  if (!state.discounts) state.discounts = [];
+  state.discounts.unshift(disc);
+  saveState();
+  renderWallet();
+  return disc;
+}
+
+function markDiscountUsed(discId) {
+  const d = state.discounts.find(x => x.id === discId);
+  if (!d || d.used) return;
+  d.used = true;
+  saveState();
+  renderWallet();
+  showToast('✅ Descuento marcado como usado');
+}
+
+function renderWallet() {
+  const list = document.getElementById('discounts-wallet-list');
+  const badge = document.getElementById('discount-count-badge');
+  if (!list) return;
+  const discounts = state.discounts || [];
+  const active = discounts.filter(d => !d.used).length;
+  if (badge) badge.textContent = active > 0 ? active + ' activos' : '';
+  if (!discounts.length) {
+    list.innerHTML = `<div style="text-align:center;padding:1.5rem;color:rgba(200,169,126,0.3);font-size:0.8rem">Sin descuentos todavía.<br>¡Escanea un lugar turístico!</div>`;
+    return;
+  }
+  list.innerHTML = discounts.map(d => {
+    const expires = new Date(d.ts + 48 * 3600 * 1000);
+    const expStr = expires.toLocaleDateString('es-BO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    return `<div class="wallet-card ${d.used ? 'used' : ''}">
+      ${d.used
+        ? `<div class="wc-used-badge">Usado</div>`
+        : `<button class="wc-use-btn" onclick="markDiscountUsed(${d.id})">Marcar usado ✓</button>`}
+      <div style="display:flex;align-items:flex-end;gap:0.5rem">
+        <div class="wc-pct">${d.pct}%</div>
+        <div>
+          <div class="wc-place">${d.place}</div>
+          <div class="wc-type">${d.type} · ${d.location}</div>
+        </div>
+      </div>
+      <div class="wc-code" onclick="copyCode('${d.code}')">${d.code} 📋</div>
+      <div class="wc-expires">${d.used ? 'Canjeado' : 'Vence: ' + expStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function copyCode(code) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(() => showToast('📋 Código copiado: ' + code));
+  } else {
+    showToast('📋 ' + code);
+  }
+}
+
+function showDiscountModal(missionId, fromPoint) {
+  const disc = addDiscount(missionId, fromPoint);
+  document.getElementById('disc-icon').textContent = fromPoint ? '📍' : '🎁';
+  document.getElementById('disc-pct').textContent = disc.pct + '%';
+  document.getElementById('disc-place').textContent = disc.place;
+  document.getElementById('disc-type-label').textContent = disc.type + ' · ' + disc.location;
+  document.getElementById('disc-expires').textContent = 'Válido por 48h · Toca el código para copiar';
+  document.getElementById('disc-code').textContent = disc.code;
+  document.getElementById('discount-modal').classList.add('active');
+  spawnConfetti();
+}
+
+function closeDiscountModal() {
+  document.getElementById('discount-modal').classList.remove('active');
+}
+
+function copyDiscountCode() {
+  copyCode(document.getElementById('disc-code').textContent);
+}
+
+// ── GPS ───────────────────────────────────────────
+let userLatLng = null;
+let gpsWatchId = null;
+let userLocationMarker = null;
+let userLocationCircle = null;
+const PROXIMITY_METERS = 300;
+const DEMO_BYPASS_GPS = true;
+
+function getDistanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function isNearPlace(place) {
+  if (state.isDemo && DEMO_BYPASS_GPS) return true;
+  if (!userLatLng) return false;
+  return getDistanceMeters(userLatLng.lat, userLatLng.lng, place.lat, place.lng) <= PROXIMITY_METERS;
+}
+
+function startGPS() {
+  if (!navigator.geolocation || gpsWatchId !== null) return;
+  gpsWatchId = navigator.geolocation.watchPosition(
+    pos => { userLatLng = { lat: pos.coords.latitude, lng: pos.coords.longitude }; updateUserLocationMarker(); updateARDistanceBadge(); },
+    () => { userLatLng = null; },
+    { enableHighAccuracy: true, maximumAge: 10000 }
+  );
+}
+
+function updateUserLocationMarker() {
+  if (!tarijaMap || !userLatLng) return;
+  const latlng = [userLatLng.lat, userLatLng.lng];
+  if (!userLocationMarker) {
+    const icon = L.divIcon({ html: `<div style="width:16px;height:16px;background:#4a90e2;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(74,144,226,0.25)"></div>`, className: '', iconSize:[16,16], iconAnchor:[8,8] });
+    userLocationMarker = L.marker(latlng, { icon, zIndexOffset:1000 }).addTo(tarijaMap);
+    userLocationCircle = L.circle(latlng, { radius: PROXIMITY_METERS, color: '#4a90e2', fillColor: '#4a90e2', fillOpacity: 0.06, weight: 1.5, opacity: 0.35, dashArray: '4 6' }).addTo(tarijaMap);
+  } else {
+    userLocationMarker.setLatLng(latlng);
+    userLocationCircle.setLatLng(latlng);
+  }
+  refreshMapMarkers();
+}
+
+function updateARDistanceBadge() {
+  const badge = document.getElementById('gps-dist-badge');
+  if (!badge || !arPointMissionId) return;
+  const place = MAP_PLACES.find(p => p.missionId === arPointMissionId);
+  if (!place || !userLatLng) return;
+  const dist = Math.round(getDistanceMeters(userLatLng.lat, userLatLng.lng, place.lat, place.lng));
+  badge.textContent = dist <= PROXIMITY_METERS ? `✅ Estás aquí · ${dist}m` : `📡 ${dist}m del lugar`;
+  badge.style.borderColor = dist <= PROXIMITY_METERS ? 'rgba(74,184,90,0.5)' : 'rgba(200,169,126,0.25)';
+}
+
+// ── REWARD POINTS ─────────────────────────────────
+let pendingRewardPointMission = null;
+let rewardPointShown = false;
+let arPointMissionId = null;
+
+function checkFirstOpenRewardPoint() {
+  if (!state.unlockedAcc?.length && !rewardPointShown) {
+    rewardPointShown = true;
+    const nextMission = MISSIONS.find(m => !state.completedMissions.includes(m.id));
+    if (nextMission) {
+      pendingRewardPointMission = nextMission.id;
+      setTimeout(() => showRewardPointModal(nextMission.id), 800);
+    }
+  }
+}
+
+function showRewardPointModal(missionId) {
+  const m = MISSIONS.find(x => x.id === missionId);
+  const reward = PLACE_REWARDS[missionId % PLACE_REWARDS.length];
+  document.getElementById('rp-place-name').textContent = m ? m.place : 'Tarija';
+  document.getElementById('rp-place-desc').textContent = m ? m.desc : '';
+  document.getElementById('rp-reward-text').textContent = `🎁 ${reward.pct}% de descuento en ${reward.name}`;
+  document.getElementById('reward-point-modal').style.display = 'flex';
+}
+
+function claimRewardPoint() {
+  closeRewardPointModal();
+  closeAR();
+  const id = pendingRewardPointMission;
+  pendingRewardPointMission = null;
+  if (id !== null) setTimeout(() => showDiscountModal(id, true), 400);
+}
+
+function closeRewardPointModal() {
+  document.getElementById('reward-point-modal').style.display = 'none';
+}
+
+function showARPoint(missionId) {
+  arPointMissionId = missionId;
+  const place = MAP_PLACES.find(p => p.missionId === missionId);
+  const overlay = document.getElementById('ar-point-overlay');
+  const badge   = document.getElementById('gps-dist-badge');
+  const demoDiv = document.getElementById('ar-demo-btns-container');
+  if (place) document.getElementById('ar-point-place-label').textContent = place.name;
+  document.getElementById('ar-point-label').textContent = '📍 ¡Toca para reclamar!';
+  overlay.classList.remove('hidden');
+  if (demoDiv) demoDiv.style.display = 'none';
+  if (badge) {
+    badge.style.display = 'block';
+    badge.textContent = userLatLng ? '📡 Calculando...' : (state.isDemo ? '✅ Modo demo' : '📡 Buscando GPS...');
+  }
+  updateARDistanceBadge();
+}
+
+function hideARPoint() {
+  arPointMissionId = null;
+  document.getElementById('ar-point-overlay').classList.add('hidden');
+  const demoDiv = document.getElementById('ar-demo-btns-container');
+  if (demoDiv) demoDiv.style.display = 'block';
+  const badge = document.getElementById('gps-dist-badge');
+  if (badge) badge.style.display = 'none';
+}
+
+function claimARPoint() {
+  const place = MAP_PLACES.find(p => p.missionId === arPointMissionId);
+  const near = place ? isNearPlace(place) : true;
+  if (!near) {
+    const dist = userLatLng && place ? Math.round(getDistanceMeters(userLatLng.lat, userLatLng.lng, place.lat, place.lng)) : null;
+    showToast(`📡 Debes estar a menos de ${PROXIMITY_METERS}m${dist ? ' (estás a ' + dist + 'm)' : ''}`);
+    return;
+  }
+  const id = arPointMissionId;
+  hideARPoint();
+  closeAR();
+  setTimeout(() => showDiscountModal(id, true), 400);
+}
+
+// ── TARIJA MAP ────────────────────────────────────
+let tarijaMap = null;
+let mapMarkers = {};
+
+function initTarijaMap() {
+  if (tarijaMap) return;
+  tarijaMap = L.map('tarija-map', {
+    center: [-21.535, -64.730],
+    zoom: 13,
+    zoomControl: true,
+    attributionControl: false,
+    zoomAnimation: true,
+    markerZoomAnimation: true,
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd' }).addTo(tarijaMap);
+  startGPS();
+  refreshMapMarkers();
+}
+
+function getMarkerClass(placeId) {
+  const place = MAP_PLACES.find(p => p.id === placeId);
+  if (!place) return 'available';
+  if (state.completedMissions.includes(place.missionId)) return 'completed';
+  if (!state.unlockedAcc?.length) {
+    const next = MISSIONS.find(m => !state.completedMissions.includes(m.id));
+    if (next && next.id === place.missionId) return 'reward';
+  }
+  return 'available';
+}
+
+function refreshMapMarkers() {
+  if (!tarijaMap) return;
+  Object.values(mapMarkers).forEach(m => m.remove());
+  mapMarkers = {};
+  MAP_PLACES.forEach(place => {
+    const markerClass = getMarkerClass(place.id);
+    const isDone = state.completedMissions.includes(place.missionId);
+    const near   = isNearPlace(place);
+    const icon = L.divIcon({ html: `<div class="pgo-marker ${markerClass}"><div class="pgo-marker-inner">${place.emoji}</div></div>`, className: '', iconSize:[48,58], iconAnchor:[24,58], popupAnchor:[0,-60] });
+    const marker = L.marker([place.lat, place.lng], { icon }).addTo(tarijaMap);
+    const mission = MISSIONS.find(m => m.id === place.missionId);
+    const acc     = mission ? ACCESSORIES.find(a => a.id === mission.accessory) : null;
+    const reward  = PLACE_REWARDS[place.missionId % PLACE_REWARDS.length];
+    const isReward = markerClass === 'reward';
+    const proximityHint = (!state.isDemo || !DEMO_BYPASS_GPS) && !near
+      ? `<div style="font-size:0.65rem;color:rgba(200,169,126,0.4);margin-bottom:0.35rem">📡 Debes estar a menos de ${PROXIMITY_METERS}m</div>` : '';
+    let actionBtn;
+    if (isDone) {
+      actionBtn = `<button class="map-popup-btn" onclick="showDiscountModal(${place.missionId},false);closeMapPopup()">🎁 Ver descuento</button>`;
+    } else {
+      actionBtn = near
+        ? `<button class="map-popup-btn ${isReward?'reward-btn':''}" onclick="openARPoint(${place.missionId})">📷 Abrir cámara AR →</button>`
+        : `<button class="map-popup-btn" style="opacity:0.5;cursor:not-allowed" disabled>📡 Acércate al lugar</button>`;
+    }
+    marker.bindPopup(`<div class="map-popup-name">${place.emoji} ${place.name}</div>
+      <div class="map-popup-desc">${place.desc}</div>
+      ${isDone ? `<div style="color:#7a9e6b;font-size:0.73rem;font-weight:600;margin-bottom:0.35rem">✅ Visitado</div>`
+               : `<div style="font-size:0.7rem;color:rgba(200,169,126,0.45);margin-bottom:0.35rem">🎒 ${acc?acc.emoji+' '+acc.name:'—'} · 🎁 ${reward.pct}% dto.</div>`}
+      ${proximityHint}${actionBtn}`, { maxWidth:240 });
+    mapMarkers[place.id] = marker;
+  });
+}
+
+function openARPoint(missionId) {
+  closeMapPopup();
+  currentMissionId = missionId;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-ar').classList.add('active');
+  startCamera();
+  setTimeout(() => showARPoint(missionId), 600);
+}
+
+function closeMapPopup() {
+  tarijaMap && tarijaMap.closePopup();
+}
+
+// ── 3D DINO ───────────────────────────────────────
+let dinoScene, dinoCamera, dinoRenderer, dinoGroup;
+let hatMesh, crownMesh, collarMesh;
+let animFrame;
+let headGroup, leftArm, rightArm, leftLeg, rightLeg, tailGroup;
+let blushLeft, blushRight, eyeStarL, eyeStarR;
+let accMeshes = {};
+
+function initDino3D() {
+  const canvas = document.getElementById('dino-canvas');
+  const w = canvas.parentElement.clientWidth;
+  const h = canvas.parentElement.clientHeight;
+
+  dinoScene = new THREE.Scene();
+  dinoCamera = new THREE.PerspectiveCamera(38, w / h, 0.1, 100);
+  dinoCamera.position.set(0, 1.6, 7.5);
+  dinoCamera.lookAt(0, 1.1, 0);
+
+  dinoRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  dinoRenderer.setSize(w, h);
+  dinoRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  dinoRenderer.shadowMap.enabled = true;
+  dinoRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // Enhanced lighting
+  const ambient = new THREE.AmbientLight(0x1a2a3a, 0.6);
+  dinoScene.add(ambient);
+
+  const keyLight = new THREE.DirectionalLight(0xc8dff0, 1.1);
+  keyLight.position.set(-3, 7, 4);
+  keyLight.castShadow = true;
+  dinoScene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x7a6040, 0.3);
+  fillLight.position.set(4, 1, 2);
+  dinoScene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0x203040, 0.45);
+  rimLight.position.set(0, -1, -5);
+  dinoScene.add(rimLight);
+
+  const underLight = new THREE.PointLight(0x0a4a4a, 0.55, 6);
+  underLight.position.set(0, -0.5, 1.5);
+  dinoScene.add(underLight);
+
+  // Warm front fill
+  const frontLight = new THREE.PointLight(0x4a3020, 0.4, 8);
+  frontLight.position.set(0, 2, 5);
+  dinoScene.add(frontLight);
+
+  accMeshes = {};
+  dinoGroup = new THREE.Group();
+  dinoScene.add(dinoGroup);
+
+  buildDino();
+  buildAccessoryObjects();
+  updateDino3DAccessories();
+
+  // Responsive canvas
+  const ro = new ResizeObserver(() => {
+    const w2 = canvas.parentElement.clientWidth;
+    const h2 = canvas.parentElement.clientHeight;
+    dinoCamera.aspect = w2 / h2;
+    dinoCamera.updateProjectionMatrix();
+    dinoRenderer.setSize(w2, h2);
+  });
+  ro.observe(canvas.parentElement);
+
+  animateDino();
+}
+
+function buildDino() {
+  const skyBlue  = new THREE.MeshPhongMaterial({ color:0x4aafba, shininess:18, specular:0x336677 });
+  const yellow   = new THREE.MeshPhongMaterial({ color:0xd4c458, shininess:10, specular:0x887744 });
+  const redCrest = new THREE.MeshPhongMaterial({ color:0xaa1a1a, shininess:20, specular:0x661111 });
+  const black    = new THREE.MeshPhongMaterial({ color:0x0a0a0a, shininess:10 });
+  const orange   = new THREE.MeshPhongMaterial({ color:0xbb3a10, shininess:40, specular:0x884422 });
+  const white    = new THREE.MeshPhongMaterial({ color:0xddd8c8, shininess:50 });
+
+  // Body
+  const bodyGeo = new THREE.SphereGeometry(1.0, 28, 22); bodyGeo.scale(1.0, 1.08, 0.88);
+  const body = new THREE.Mesh(bodyGeo, skyBlue); body.position.set(0, 1.0, 0); dinoGroup.add(body);
+
+  // Belly
+  const bellyGeo = new THREE.SphereGeometry(0.82, 22, 18); bellyGeo.scale(0.92, 1.05, 0.42);
+  const belly = new THREE.Mesh(bellyGeo, yellow); belly.position.set(0, 1.0, 0.72); dinoGroup.add(belly);
+
+  // Belly markings
+  const dropGeo = new THREE.SphereGeometry(0.14, 12, 10); dropGeo.scale(0.7, 1.2, 0.35);
+  dinoGroup.add(Object.assign(new THREE.Mesh(dropGeo, skyBlue), { position: new THREE.Vector3(0, 1.42, 0.82) }));
+
+  const triGeo = new THREE.CylinderGeometry(0, 0.22, 0.22, 3, 1);
+  const tri = new THREE.Mesh(triGeo, skyBlue); tri.position.set(0, 0.58, 0.82); tri.rotation.y = Math.PI/6; dinoGroup.add(tri);
+
+  [-0.28, 0.28].forEach(x => {
+    const oGeo = new THREE.SphereGeometry(0.13, 10, 8); oGeo.scale(1, 0.7, 0.35);
+    dinoGroup.add(Object.assign(new THREE.Mesh(oGeo, skyBlue), { position: new THREE.Vector3(x, 0.75, 0.82) }));
+  });
+
+  // Neck
+  const neckGeo = new THREE.CylinderGeometry(0.42, 0.55, 0.38, 14);
+  const neck = new THREE.Mesh(neckGeo, skyBlue); neck.position.set(0, 1.95, 0.12); neck.rotation.x = -0.15; dinoGroup.add(neck);
+
+  // Head
+  headGroup = new THREE.Group(); headGroup.position.set(0, 2.44, 0.18); dinoGroup.add(headGroup);
+  const skullGeo = new THREE.SphereGeometry(0.72, 26, 20); skullGeo.scale(1.08, 0.95, 1.0);
+  headGroup.add(new THREE.Mesh(skullGeo, skyBlue));
+
+  // Crest
+  [
+    { x:0, y:0.7, z:-0.08, rx:-0.12, rz:0, rBase:0.14, h:0.58 },
+    { x:-0.28, y:0.56, z:-0.04, rx:-0.05, rz:0.38, rBase:0.10, h:0.44 },
+    { x:0.28, y:0.56, z:-0.04, rx:-0.05, rz:-0.38, rBase:0.10, h:0.44 },
+  ].forEach(c => {
+    const cGeo = new THREE.ConeGeometry(c.rBase, c.h, 5);
+    const cm = new THREE.Mesh(cGeo, redCrest);
+    cm.position.set(c.x, c.y, c.z); cm.rotation.x = c.rx; cm.rotation.z = c.rz;
+    headGroup.add(cm);
+  });
+
+  // Jaw
+  const jawGeo = new THREE.SphereGeometry(0.62, 22, 16); jawGeo.scale(1.1, 0.65, 0.95);
+  const jaw = new THREE.Mesh(jawGeo, yellow); jaw.position.set(0, -0.18, 0.28); headGroup.add(jaw);
+
+  // Snout
+  const snoutGeo = new THREE.SphereGeometry(0.38, 16, 12); snoutGeo.scale(1.05, 0.7, 1.1);
+  headGroup.add(Object.assign(new THREE.Mesh(snoutGeo, yellow), { position: new THREE.Vector3(0, -0.08, 0.52) }));
+
+  // Nostrils
+  [-0.12, 0.12].forEach(x => {
+    const nGeo = new THREE.SphereGeometry(0.055, 8, 6);
+    headGroup.add(Object.assign(new THREE.Mesh(nGeo, black), { position: new THREE.Vector3(x, -0.04, 0.88) }));
+  });
+
+  // Fangs
+  [[0,1],[1,-1]].forEach(([dx,dir]) => {
+    const fGeo = new THREE.ConeGeometry(0.055, 0.22, 5);
+    const f = new THREE.Mesh(fGeo, white);
+    f.position.set(dx===0?-0.14:0.14, -0.18, 0.42); f.rotation.x = dir*0.15;
+    headGroup.add(f);
+  });
+
+  // Eyes
+  const eyePositions = [-0.28, 0.28];
+  eyePositions.forEach((x, i) => {
+    const eyeGeo = new THREE.SphereGeometry(0.13, 14, 12);
+    headGroup.add(Object.assign(new THREE.Mesh(eyeGeo, black), { position: new THREE.Vector3(x, 0.15, 0.62) }));
+    const pupilGeo = new THREE.SphereGeometry(0.06, 10, 8);
+    const pupilMat = new THREE.MeshPhongMaterial({ color: 0x000000 });
+    headGroup.add(Object.assign(new THREE.Mesh(pupilGeo, pupilMat), { position: new THREE.Vector3(x, 0.15, 0.73) }));
+    const starGeo = new THREE.SphereGeometry(0.035, 8, 6);
+    const starMat = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5 });
+    const star = new THREE.Mesh(starGeo, starMat);
+    star.position.set(x + 0.03, 0.19, 0.76);
+    headGroup.add(star);
+    if (i === 0) eyeStarL = star;
+    else eyeStarR = star;
+    const ringGeo = new THREE.TorusGeometry(0.14, 0.025, 8, 16);
+    headGroup.add(Object.assign(new THREE.Mesh(ringGeo, new THREE.MeshPhongMaterial({ color: 0x222222, shininess: 5 })), {
+      position: new THREE.Vector3(x, 0.15, 0.61),
+      rotation: new THREE.Euler(Math.PI/2, 0, 0)
+    }));
+  });
+
+  // Arms
+  const armGeo = new THREE.SphereGeometry(0.28, 14, 12); armGeo.scale(0.85, 1.1, 0.75);
+  leftArm = new THREE.Mesh(armGeo.clone(), skyBlue); leftArm.position.set(-1.02, 0.95, 0.2); leftArm.rotation.z = 0.45; dinoGroup.add(leftArm);
+  rightArm = new THREE.Mesh(armGeo.clone(), skyBlue); rightArm.position.set(1.02, 0.95, 0.2); rightArm.rotation.z = -0.45; dinoGroup.add(rightArm);
+
+  // Claws
+  [-1,1].forEach(dir => {
+    [-0.08,0.08].forEach(dx => {
+      const clawGeo = new THREE.ConeGeometry(0.04, 0.14, 4);
+      const claw = new THREE.Mesh(clawGeo, black);
+      claw.position.set(dir*(1.04+dx), 0.64, 0.24); claw.rotation.z = dir*0.3;
+      dinoGroup.add(claw);
+    });
+  });
+
+  // Legs
+  const legGeo = new THREE.SphereGeometry(0.34, 14, 12); legGeo.scale(0.82, 1.15, 0.82);
+  leftLeg = new THREE.Mesh(legGeo.clone(), skyBlue); leftLeg.position.set(-0.42, 0.06, 0.1); dinoGroup.add(leftLeg);
+  rightLeg = new THREE.Mesh(legGeo.clone(), skyBlue); rightLeg.position.set(0.42, 0.06, 0.1); dinoGroup.add(rightLeg);
+
+  // Feet
+  [-0.42, 0.42].forEach(x => {
+    const footGeo = new THREE.SphereGeometry(0.3, 14, 10); footGeo.scale(1.05, 0.65, 1.2);
+    const foot = new THREE.Mesh(footGeo, skyBlue); foot.position.set(x, -0.3, 0.1); dinoGroup.add(foot);
+    [-0.1, 0, 0.1].forEach(dx => {
+      const cGeo = new THREE.ConeGeometry(0.045, 0.16, 4);
+      const c = new THREE.Mesh(cGeo, black); c.position.set(x+dx, -0.35, 0.32); c.rotation.x = -0.4;
+      dinoGroup.add(c);
+    });
+  });
+
+  // Tail
+  tailGroup = new THREE.Group(); tailGroup.position.set(0, 0.7, -0.8); dinoGroup.add(tailGroup);
+  [
+    { x:0, y:-0.1, z:0,    sx:0.55, sy:0.55, sz:0.55 },
+    { x:0.2, y:-0.25, z:-0.4, sx:0.45, sy:0.45, sz:0.45 },
+    { x:0.35, y:-0.35, z:-0.78, sx:0.35, sy:0.35, sz:0.35 },
+  ].forEach(seg => {
+    const sGeo = new THREE.SphereGeometry(0.48, 12, 10); sGeo.scale(seg.sx, seg.sy, seg.sz);
+    tailGroup.add(Object.assign(new THREE.Mesh(sGeo, skyBlue), { position: new THREE.Vector3(seg.x, seg.y, seg.z) }));
+  });
+
+  // Back spines
+  [
+    { y:1.9, z:-0.62, h:0.28 }, { y:1.75, z:-0.72, h:0.32 }, { y:1.52, z:-0.8, h:0.28 }
+  ].forEach(s => {
+    const spineGeo = new THREE.ConeGeometry(0.06, s.h, 5);
+    const spine = new THREE.Mesh(spineGeo, redCrest);
+    spine.position.set(0, s.y, s.z); spine.rotation.x = -0.5; dinoGroup.add(spine);
+  });
+
+  dinoGroup.position.y = -0.72;
+}
+
+function buildAccessoryObjects() {
+  // Hats (id 0-3)
+  { // id:0 Chapaco hat
+    const g = new THREE.Group();
+    const brimGeo = new THREE.CylinderGeometry(0.7, 0.72, 0.06, 18);
+    g.add(new THREE.Mesh(brimGeo, new THREE.MeshPhongMaterial({ color:0x1a0a00, shininess:60 })));
+    const topGeo = new THREE.CylinderGeometry(0.38, 0.42, 0.62, 16);
+    const top = new THREE.Mesh(topGeo, new THREE.MeshPhongMaterial({ color:0x1a0a00, shininess:60 }));
+    top.position.y = 0.34; g.add(top);
+    const bandGeo = new THREE.CylinderGeometry(0.435, 0.435, 0.1, 16);
+    const band = new THREE.Mesh(bandGeo, new THREE.MeshPhongMaterial({ color:0xc4882f, shininess:120, specular:0xffcc66 }));
+    band.position.y = 0.12; g.add(band);
+    g.position.set(0, 1.42, 0.18); g.visible = false;
+    headGroup.add(g); accMeshes[0] = g;
+  }
+  { // id:1 Grape crown
+    const g = new THREE.Group();
+    const ringGeo = new THREE.TorusGeometry(0.48, 0.07, 10, 24);
+    g.add(new THREE.Mesh(ringGeo, new THREE.MeshPhongMaterial({ color:0x3d1a55, shininess:40 })));
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const gGeo = new THREE.SphereGeometry(0.11, 8, 7);
+      const grape = new THREE.Mesh(gGeo, new THREE.MeshPhongMaterial({ color:0x6a1aaa, shininess:80, specular:0x8855cc }));
+      grape.position.set(Math.cos(a)*0.48, 0.1 + Math.random()*0.08, Math.sin(a)*0.48);
+      g.add(grape);
+    }
+    g.position.set(0, 1.38, 0.18); g.visible = false;
+    headGroup.add(g); accMeshes[1] = g;
+  }
+  { // id:2 Explorer helmet
+    const g = new THREE.Group();
+    const helmGeo = new THREE.SphereGeometry(0.68, 18, 14); helmGeo.scale(1, 0.82, 1.05);
+    g.add(new THREE.Mesh(helmGeo, new THREE.MeshPhongMaterial({ color:0xd4b040, shininess:80, specular:0xffdd44 })));
+    const brimGeo2 = new THREE.CylinderGeometry(0.74, 0.72, 0.06, 18);
+    const brim = new THREE.Mesh(brimGeo2, new THREE.MeshPhongMaterial({ color:0xb89030, shininess:100 }));
+    brim.position.y = -0.24; g.add(brim);
+    g.position.set(0, 1.38, 0.18); g.visible = false;
+    headGroup.add(g); accMeshes[2] = g;
+  }
+  { // id:3 Hero helmet
+    const g = new THREE.Group();
+    const helmGeo = new THREE.SphereGeometry(0.66, 16, 12); helmGeo.scale(1.05, 0.88, 1);
+    g.add(new THREE.Mesh(helmGeo, new THREE.MeshPhongMaterial({ color:0x888888, shininess:200, specular:0xffffff })));
+    const crestGeo = new THREE.BoxGeometry(0.1, 0.42, 0.85);
+    const crest = new THREE.Mesh(crestGeo, new THREE.MeshPhongMaterial({ color:0xcc2222, shininess:40 }));
+    crest.position.y = 0.52; g.add(crest);
+    g.position.set(0, 1.4, 0.18); g.visible = false;
+    headGroup.add(g); accMeshes[3] = g;
+  }
+  // Necks (id 4-7)
+  { // id:4 Ceibo collar
+    const g = new THREE.Group();
+    const collarGeo = new THREE.TorusGeometry(0.45, 0.05, 8, 20);
+    g.add(new THREE.Mesh(collarGeo, new THREE.MeshPhongMaterial({ color:0x3d8042, shininess:30 })));
+    for (let i = 0; i < 6; i++) {
+      const a = (i/6)*Math.PI*2;
+      const fGeo = new THREE.SphereGeometry(0.09, 8, 6);
+      const f = new THREE.Mesh(fGeo, new THREE.MeshPhongMaterial({ color:0xcc4488, shininess:60 }));
+      f.position.set(Math.cos(a)*0.45, 0, Math.sin(a)*0.45); g.add(f);
+    }
+    g.position.set(0, 1.72, 0.22); g.rotation.x = 0.2; g.visible = false;
+    dinoGroup.add(g); accMeshes[4] = g;
+  }
+  { // id:5 Clay collar
+    const g = new THREE.Group();
+    const baseGeo = new THREE.TorusGeometry(0.46, 0.06, 10, 20);
+    g.add(new THREE.Mesh(baseGeo, new THREE.MeshPhongMaterial({ color:0xc8a060, shininess:20 })));
+    for (let i = 0; i < 8; i++) {
+      const a = (i/8)*Math.PI*2;
+      const bGeo = new THREE.SphereGeometry(0.07, 7, 5);
+      const b = new THREE.Mesh(bGeo, new THREE.MeshPhongMaterial({ color:0xa87840, shininess:15 }));
+      b.position.set(Math.cos(a)*0.46, 0, Math.sin(a)*0.46); g.add(b);
+    }
+    g.position.set(0, 1.72, 0.22); g.rotation.x = 0.2; g.visible = false;
+    dinoGroup.add(g); accMeshes[5] = g;
+  }
+  { // id:6 Medal
+    const g = new THREE.Group();
+    const chainGeo = new THREE.TorusGeometry(0.44, 0.03, 6, 20);
+    g.add(new THREE.Mesh(chainGeo, new THREE.MeshPhongMaterial({ color:0xc8a030, shininess:200 })));
+    const medalGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.04, 16);
+    const medal = new THREE.Mesh(medalGeo, new THREE.MeshPhongMaterial({ color:0xf0c040, shininess:300, specular:0xffffff }));
+    medal.position.y = -0.22; g.add(medal);
+    g.position.set(0, 1.72, 0.22); g.rotation.x = 0.2; g.visible = false;
+    dinoGroup.add(g); accMeshes[6] = g;
+  }
+  { // id:7 Fossil collar
+    const g = new THREE.Group();
+    const colGeo = new THREE.TorusGeometry(0.45, 0.055, 8, 20);
+    g.add(new THREE.Mesh(colGeo, new THREE.MeshPhongMaterial({ color:0x8ab4c2, shininess:50 })));
+    const boneGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.28, 8);
+    const bone = new THREE.Mesh(boneGeo, new THREE.MeshPhongMaterial({ color:0xd8d8c8, shininess:40 }));
+    bone.position.y = -0.2; g.add(bone);
+    g.position.set(0, 1.72, 0.22); g.rotation.x = 0.2; g.visible = false;
+    dinoGroup.add(g); accMeshes[7] = g;
+  }
+  // Backs (id 8-11)
+  { // id:8 Vineyard backpack
+    const g = new THREE.Group();
+    const packGeo = new THREE.BoxGeometry(0.7, 0.85, 0.4); packGeo.translate(0, 0, -0.2);
+    g.add(new THREE.Mesh(packGeo, new THREE.MeshPhongMaterial({ color:0x7a1e3c, shininess:30 })));
+    for (let i = 0; i < 5; i++) {
+      const gGeo = new THREE.SphereGeometry(0.1, 8, 6);
+      const grape = new THREE.Mesh(gGeo, new THREE.MeshPhongMaterial({ color:0x4a0a8a, shininess:80 }));
+      grape.position.set((i-2)*0.14, 0.25, -0.05); g.add(grape);
+    }
+    g.position.set(0, 1.1, -0.8); g.visible = false;
+    dinoGroup.add(g); accMeshes[8] = g;
+  }
+  { // id:9 Portillo cape
+    const g = new THREE.Group();
+    const shapeGeo = new THREE.SphereGeometry(0.85, 14, 10); shapeGeo.scale(1, 1.3, 0.35);
+    g.add(new THREE.Mesh(shapeGeo, new THREE.MeshPhongMaterial({ color:0xc47020, shininess:10, transparent:true, opacity:0.88 })));
+    g.position.set(0, 1.0, -0.85); g.visible = false;
+    dinoGroup.add(g); accMeshes[9] = g;
+  }
+  { // id:10 Butterfly wings
+    const g = new THREE.Group();
+    [-1,1].forEach(side => {
+      const wingGeo = new THREE.SphereGeometry(0.7, 12, 8); wingGeo.scale(1, 1.5, 0.1);
+      const wing = new THREE.Mesh(wingGeo, new THREE.MeshPhongMaterial({ color:side>0?0x4aaa30:0xcc4488, shininess:20, transparent:true, opacity:0.9 }));
+      wing.position.set(side*0.65, 1.25, -0.6); wing.rotation.y = side*0.4;
+      g.add(wing);
+    });
+    g.visible = false;
+    dinoGroup.add(g); accMeshes[10] = g;
+  }
+  { // id:11 Quiver
+    const g = new THREE.Group();
+    const qGeo = new THREE.CylinderGeometry(0.12, 0.14, 0.8, 10);
+    g.add(new THREE.Mesh(qGeo, new THREE.MeshPhongMaterial({ color:0x4a2c1a, shininess:30 })));
+    for (let i = 0; i < 4; i++) {
+      const aGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.7, 6);
+      const arrow = new THREE.Mesh(aGeo, new THREE.MeshPhongMaterial({ color:0x8a6030 }));
+      arrow.position.set((i-1.5)*0.055, 0.35, 0); g.add(arrow);
+    }
+    g.rotation.z = 0.3; g.position.set(-0.7, 1.1, -0.65); g.visible = false;
+    dinoGroup.add(g); accMeshes[11] = g;
+  }
+  // Weapons (id 12-15)
+  { // id:12 Clay urn
+    const g = new THREE.Group();
+    const urnGeo = new THREE.SphereGeometry(0.32, 14, 10); urnGeo.scale(0.85, 1.1, 0.85);
+    g.add(new THREE.Mesh(urnGeo, new THREE.MeshPhongMaterial({ color:0xc8a060, shininess:20 })));
+    const neckGeo2 = new THREE.CylinderGeometry(0.1, 0.18, 0.2, 10);
+    const n = new THREE.Mesh(neckGeo2, new THREE.MeshPhongMaterial({ color:0xb08840, shininess:15 }));
+    n.position.y = 0.32; g.add(n);
+    g.rotation.z = 0.2; g.position.set(-0.7, 0.9, 0.35); g.visible = false;
+    dinoGroup.add(g); accMeshes[12] = g;
+  }
+  { // id:13 Sword
+    const g = new THREE.Group();
+    const bladeGeo = new THREE.BoxGeometry(0.055, 1.0, 0.018);
+    g.add(new THREE.Mesh(bladeGeo, new THREE.MeshPhongMaterial({ color:0xd8d8e8, shininess:300, specular:0xffffff })));
+    const guardGeo2 = new THREE.BoxGeometry(0.32, 0.05, 0.04);
+    const guard = new THREE.Mesh(guardGeo2, new THREE.MeshPhongMaterial({ color:0xc4882f, shininess:150, specular:0xffdd88 }));
+    guard.position.y = -0.35; g.add(guard);
+    const gripGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.28, 8);
+    const grip = new THREE.Mesh(gripGeo, new THREE.MeshPhongMaterial({ color:0x2a1a0a }));
+    grip.position.y = -0.55; g.add(grip);
+    const pommelGeo = new THREE.SphereGeometry(0.07, 8, 7);
+    const pommel = new THREE.Mesh(pommelGeo, new THREE.MeshPhongMaterial({ color:0xc4882f, shininess:180 }));
+    pommel.position.y = -0.72; g.add(pommel);
+    g.rotation.z = 0.3; g.rotation.x = 0.15; g.position.set(-0.75, 1.1, 0.3); g.visible = false;
+    dinoGroup.add(g); accMeshes[13] = g;
+  }
+  { // id:14 Charango
+    const g = new THREE.Group();
+    const bodyGeo2 = new THREE.SphereGeometry(0.22, 12, 10); bodyGeo2.scale(1.1, 1.4, 0.55);
+    g.add(new THREE.Mesh(bodyGeo2, new THREE.MeshPhongMaterial({ color:0x7a3a10, shininess:80, specular:0xff8844 })));
+    const neckGeo3 = new THREE.CylinderGeometry(0.03, 0.04, 0.7, 8);
+    const neck2 = new THREE.Mesh(neckGeo3, new THREE.MeshPhongMaterial({ color:0x5a2a0a }));
+    neck2.position.y = 0.7; g.add(neck2);
+    for (let i = 0; i < 5; i++) {
+      const sg = new THREE.CylinderGeometry(0.005, 0.005, 1.1, 4);
+      const str = new THREE.Mesh(sg, new THREE.MeshPhongMaterial({ color:0xf0e8c8, shininess:200 }));
+      str.position.x = (i-2)*0.025; g.add(str);
+    }
+    g.rotation.z = 0.4; g.rotation.x = 0.1; g.position.set(-0.72, 0.85, 0.3); g.visible = false;
+    dinoGroup.add(g); accMeshes[14] = g;
+  }
+  { // id:15 Staff
+    const g = new THREE.Group();
+    const staffGeo = new THREE.CylinderGeometry(0.04, 0.05, 1.6, 10);
+    g.add(new THREE.Mesh(staffGeo, new THREE.MeshPhongMaterial({ color:0x5a3010, shininess:40 })));
+    [0.5, 0.1, -0.3, -0.6].forEach(y => {
+      const kg = new THREE.TorusGeometry(0.055, 0.018, 7, 12);
+      const k = new THREE.Mesh(kg, new THREE.MeshPhongMaterial({ color:0x3a1a05 }));
+      k.position.y = y; k.rotation.x = Math.PI/2; g.add(k);
+    });
+    const gemGeo = new THREE.SphereGeometry(0.1, 10, 8);
+    const gem = new THREE.Mesh(gemGeo, new THREE.MeshPhongMaterial({ color:0x44bbcc, shininess:300, specular:0xaaffff, emissive:0x112233, emissiveIntensity:0.3 }));
+    gem.position.y = 0.84; g.add(gem);
+    g.rotation.z = 0.25; g.position.set(-0.78, 0.95, 0.3); g.visible = false;
+    dinoGroup.add(g); accMeshes[15] = g;
+  }
+}
+
+function updateDino3DAccessories() {
+  if (!accMeshes || !Object.keys(accMeshes).length) return;
+  Object.values(accMeshes).forEach(m => { if (m) m.visible = false; });
+  Object.values(state.equipped).forEach(id => {
+    if (id !== null && accMeshes[id]) accMeshes[id].visible = true;
+  });
+  hatMesh    = accMeshes[state.equipped.hat]    || null;
+  crownMesh  = accMeshes[state.equipped.neck]   || null;
+  collarMesh = accMeshes[state.equipped.back]   || null;
+}
+
+function animateDino() {
+  animFrame = requestAnimationFrame(animateDino);
+  const t = Date.now() * 0.001;
+
+  if (!dinoGroup) { if (dinoRenderer) dinoRenderer.render(dinoScene, dinoCamera); return; }
+
+  dinoGroup.position.y = Math.sin(t * 0.85) * 0.08 - 0.72;
+  dinoGroup.rotation.y = Math.sin(t * 0.32) * 0.15;
+
+  if (headGroup) {
+    headGroup.rotation.x = Math.sin(t * 1.0) * 0.04;
+    headGroup.position.y = 2.44 + Math.sin(t * 0.85) * 0.025;
+  }
+
+  if (leftArm)  leftArm.rotation.z  = Math.sin(t * 1.2) * 0.1;
+  if (rightArm) rightArm.rotation.z = Math.sin(t * 1.2 + 0.8) * 0.1;
+
+  if (leftLeg)  leftLeg.rotation.x  = Math.sin(t * 1.5) * 0.06;
+  if (rightLeg) rightLeg.rotation.x = Math.sin(t * 1.5 + Math.PI) * 0.06;
+
+  if (tailGroup) tailGroup.rotation.y = Math.sin(t * 1.4) * 0.22;
+
+  const blinkCycle = t % 4.2;
+  const blinkScale = (blinkCycle > 4.05) ? Math.max(0.05, 1 - (blinkCycle - 4.05) / 0.08) : 1;
+  if (eyeStarL) eyeStarL.scale.y = blinkScale;
+  if (eyeStarR) eyeStarR.scale.y = blinkScale;
+
+  if (crownMesh && crownMesh.visible) crownMesh.rotation.y = t * 0.6;
+  if (accMeshes[10] && accMeshes[10].visible) accMeshes[10].rotation.y = Math.sin(t * 3.5) * 0.15;
+
+  if (dinoRenderer) dinoRenderer.render(dinoScene, dinoCamera);
+}
+
+// ── DINO INTERACTIONS ─────────────────────────────
+const tapMessages = ['¡Hola! 👋','¡Soy Rex! 🦕','¡Exploremos! 🗺️','¡Wuuu! ✨','¡Tarija! ❤️','¡Colecciona más! 🎒'];
+let tapIdx = 0;
+
+function tapDino() {
+  if (dinoGroup) {
+    const startY = dinoGroup.position.y;
+    let frame = 0;
+    const bounce = () => {
+      frame++;
+      dinoGroup.position.y = startY + Math.sin(frame * 0.3) * 0.18 * Math.exp(-frame * 0.07);
+      if (frame < 40) requestAnimationFrame(bounce);
+    };
+    bounce();
+  }
+  const area = document.getElementById('dino-area');
+  const sparks = ['✨','⭐','💫','🌟','❤️','💚'];
+  for (let i = 0; i < 6; i++) {
+    const el = document.createElement('div');
+    el.className = 'dino-sparkle';
+    el.textContent = sparks[Math.floor(Math.random() * sparks.length)];
+    el.style.left = (30 + Math.random() * 40) + '%';
+    el.style.top  = (20 + Math.random() * 50) + '%';
+    el.style.animationDelay = (i * 0.08) + 's';
+    el.style.animationDuration = (1.4 + Math.random() * 0.8) + 's';
+    area.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+  showToast(tapMessages[tapIdx++ % tapMessages.length]);
+}
+
+function spawnConfetti() {
+  const colors = ['#7a9e6b','#c4882f','#7a1e3c','#f2ead8','#8ab4c2','#c8a97e'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.5}s;top:-20px;transform:rotate(${Math.random()*360}deg);`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── INIT ──────────────────────────────────────────
+(function() {
+  loadState();
+  if (localStorage.getItem('urion_state') && state.userName !== 'Explorador') {
+    enterApp();
+  }
+})();
+</script>
 </body>
 </html>
