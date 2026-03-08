@@ -66,197 +66,88 @@
 ════════════════════════════════════════════ -->
 <div id="screen-app" class="screen">
 
-  <!-- TOP NAV -->
-  <div class="top-nav">
+  <nav class="glass-navbar" id="main-nav">
     <div class="nav-brand">Urion 🦕</div>
-    <div style="display:flex;align-items:center;gap:0.75rem">
-      <div class="nav-xp">
-        <span>⭐</span>
-        <span id="xp-display">0 XP</span>
-      </div>
-      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--vine),var(--wine));display:flex;align-items:center;justify-content:center;font-size:0.9rem;cursor:pointer" onclick="switchTab('profile')">
-        <span id="avatar-initial">?</span>
-      </div>
+    <div class="nav-links">
+      <a href="#home" class="nav-link active">Inicio</a>
+      <a href="#map" class="nav-link">Mapa</a>
+      <a href="#explore" class="nav-link">Explorar</a>
+      <a href="#places" class="nav-link">Lugares</a>
+      <a href="#about" class="nav-link">Perfil</a>
     </div>
-  </div>
-
-  <!-- TAB: DASHBOARD -->
-  <div class="tab-content active" id="tab-home">
-
-    <!-- Dino 3D viewport -->
-    <div class="hero-dino-area" id="dino-area" onclick="tapDino()">
-      <canvas id="dino-canvas"></canvas>
-      <div class="dino-glow"></div>
-      <div class="dino-name-badge">Rex · Lv.<span id="dino-level">1</span></div>
-      <div class="dino-tap-hint">✦ toca para interactuar</div>
+    <div class="nav-actions">
+      <div class="nav-xp">⭐ <span id="xp-display">0 XP</span></div>
     </div>
+  </nav>
 
-    <!-- Equipped slots preview -->
-    <div id="equipped-preview" style="display:flex;gap:0.4rem;padding:0.5rem 1.25rem;min-height:72px">
-      <!-- Dynamic 4-slot badges -->
-    </div>
-
-    <!-- Scan button -->
-    <div style="padding:0.75rem 0">
-      <button class="scan-btn" onclick="openAR()">
-        <span style="font-size:1.3rem">📷</span>
-        Escanear Lugar Turístico
-      </button>
-    </div>
-
-    <div class="vine-divider">✦</div>
-
-    <!-- Accessories -->
-    <div class="section-title">
-      <span>🎒</span> Personalizar a Rex
-    </div>
-
-    <!-- Category filter tabs -->
-    <div style="display:flex;gap:0.5rem;padding:0 1.25rem 0.75rem;overflow-x:auto;scrollbar-width:none">
-      <button class="acc-filter-btn active" data-cat="all"    onclick="activeAccCat='all';renderAccGrid()">Todo</button>
-      <button class="acc-filter-btn"        data-cat="hat"    onclick="activeAccCat='hat';renderAccGrid()">🎩 Sombrero</button>
-      <button class="acc-filter-btn"        data-cat="neck"   onclick="activeAccCat='neck';renderAccGrid()">📿 Collar</button>
-      <button class="acc-filter-btn"        data-cat="back"   onclick="activeAccCat='back';renderAccGrid()">🎒 Espalda</button>
-      <button class="acc-filter-btn"        data-cat="weapon" onclick="activeAccCat='weapon';renderAccGrid()">⚔️ Arma</button>
-    </div>
-
-    <div class="acc-grid" id="acc-grid">
-      <!-- Dynamic -->
-    </div>
-
-    <!-- Progress hint -->
-    <div style="margin:1rem 1.25rem 0;padding:0.9rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,126,0.1);border-radius:1rem">
-      <div style="font-size:0.75rem;color:var(--sage);font-weight:600;margin-bottom:0.4rem">💡 Próxima misión</div>
-      <div style="font-size:0.82rem;color:rgba(200,169,126,0.7)" id="next-mission-hint">Visita la Catedral Basílica de Tarija para desbloquear el Sombrero Chapaco 🎩</div>
-    </div>
-
-    <div style="height:1rem"></div>
-  </div>
-
-  <!-- TAB: MISSIONS -->
-  <div class="tab-content" id="tab-missions">
-    <div class="section-title" style="padding-bottom:1rem">
-      <span>🗺️</span> Misiones · Tarija
-    </div>
-    <div id="missions-list">
-      <!-- Dynamic -->
-    </div>
-  </div>
-
-  <!-- TAB: PROFILE -->
-  <div class="tab-content" id="tab-profile">
-    <div class="section-title" style="padding-bottom:0.5rem">
-      <span>👤</span> Tu Perfil Explorador
-    </div>
-
-    <!-- User card -->
-    <div style="text-align:center;padding:1.2rem 1.25rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,126,0.12);border-radius:1.25rem;margin:0 1.25rem 1rem">
-      <div style="font-size:2.5rem;margin-bottom:0.4rem">🧭</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream)" id="profile-name">Explorador</div>
-      <div style="font-size:0.72rem;color:var(--sage);margin-top:0.15rem;letter-spacing:0.1em;text-transform:uppercase" id="profile-mode-label">Modo Demo</div>
-    </div>
-
-    <div style="padding:0 1.25rem">
-      <!-- Stats -->
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-num" id="stat-visits">0</div>
-          <div class="stat-lbl">Lugares</div>
+  <main class="app-content">
+    
+    <section id="home" class="app-section fade-in">
+      <div class="hero-container">
+        <div class="hero-text slide-up">
+          <h1 class="hero-title">Descubre Tarija</h1>
+          <p class="hero-subtitle">Explora la historia, cultura y naturaleza del valle chapaco junto a Rex. Colecciona accesorios en realidad aumentada.</p>
+          <div class="hero-buttons">
+            <a href="#map" class="btn-primary" style="text-decoration:none; display:inline-block; text-align:center;">🗺️ Explorar el Mapa</a>
+            <a href="#places" class="btn-secondary" style="text-decoration:none; display:inline-block; text-align:center;">📍 Descubrir Lugares</a>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="stat-acc">0</div>
-          <div class="stat-lbl">Accesorios</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="stat-xp">0</div>
-          <div class="stat-lbl">XP Total</div>
+        <div class="hero-dino-area slide-up" id="dino-area" onclick="tapDino()">
+          <canvas id="dino-canvas"></canvas>
+          <div class="dino-glow"></div>
+          <div class="dino-tap-hint">✦ toca para interactuar</div>
         </div>
       </div>
+    </section>
 
-      <!-- XP bar -->
-      <div class="xp-bar-container">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:0.82rem;color:var(--cream);font-weight:600">Nivel <span id="lvl-num">1</span></span>
-          <span style="font-size:0.75rem;color:var(--sage)" id="xp-progress-text">0 / 100 XP</span>
-        </div>
-        <div class="xp-bar-track">
-          <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
-        </div>
+    <section id="explore" class="app-section fade-in">
+      <div class="section-header">
+        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">🎒 Personaliza tu Aventura</h2>
+        <p style="color:rgba(200,169,126,0.7); margin-bottom: 1rem;">Completa misiones para desbloquear accesorios históricos.</p>
+      </div>
+      
+      <div style="display:flex;gap:0.5rem;padding:0 0 0.75rem;overflow-x:auto;scrollbar-width:none">
+        <button class="acc-filter-btn active" data-cat="all" onclick="activeAccCat='all';renderAccGrid()">Todo</button>
+        <button class="acc-filter-btn" data-cat="hat" onclick="activeAccCat='hat';renderAccGrid()">🎩 Sombrero</button>
+        <button class="acc-filter-btn" data-cat="neck" onclick="activeAccCat='neck';renderAccGrid()">📿 Collar</button>
+        <button class="acc-filter-btn" data-cat="back" onclick="activeAccCat='back';renderAccGrid()">🎒 Espalda</button>
+        <button class="acc-filter-btn" data-cat="weapon" onclick="activeAccCat='weapon';renderAccGrid()">⚔️ Arma</button>
       </div>
 
-      <!-- EXIT DEMO / LOGIN button -->
-      <div id="demo-exit-section" style="display:none;margin-top:1rem">
-        <div style="background:rgba(122,158,107,0.1);border:1px solid rgba(122,158,107,0.25);border-radius:1rem;padding:0.9rem 1rem;margin-bottom:0.75rem">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--sage);font-weight:600;margin-bottom:0.3rem">Estás en modo demo</div>
-          <div style="font-size:0.8rem;color:rgba(200,169,126,0.65);line-height:1.4">Crea una cuenta para guardar tu progreso, canjear descuentos reales y aparecer en el ranking de exploradores.</div>
-        </div>
-        <button class="btn-primary" style="width:100%;margin-bottom:0.5rem" onclick="exitDemoMode()">
-          🚀 Crear cuenta real
-        </button>
-        <button class="btn-secondary" style="width:100%" onclick="resetGame()">
-          🗑️ Reiniciar progreso demo
-        </button>
-      </div>
+      <div class="acc-grid" id="acc-grid"></div>
+    </section>
 
-      <div id="real-account-section" style="display:none;margin-top:1rem">
-        <button class="btn-secondary" style="width:100%" onclick="resetGame()">
-          🗑️ Reiniciar progreso
-        </button>
+    <section id="map" class="app-section fade-in">
+      <div class="section-header">
+        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">🗺️ Mapa Interactivo</h2>
+        <p style="color:rgba(200,169,126,0.7); margin-bottom: 1rem;">Encuentra lugares turísticos y recompensas cercanas.</p>
       </div>
-    </div>
-
-    <!-- DISCOUNTS WALLET -->
-    <div style="margin:1rem 1.25rem 0">
-      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem">
-        🎫 Billetera de Descuentos
-        <span id="discount-count-badge" style="background:var(--wine);color:var(--cream);border-radius:2rem;padding:0.1rem 0.5rem;font-size:0.68rem;font-weight:600;font-family:'DM Sans',sans-serif"></span>
+      <div id="map-container" class="modern-map-container">
+        <div id="tarija-map"></div>
       </div>
-      <div id="discounts-wallet-list">
-        <div style="text-align:center;padding:1.5rem;color:rgba(200,169,126,0.3);font-size:0.82rem">
-          Sin descuentos todavía. ¡Escanea un lugar turístico!
-        </div>
+    </section>
+
+    <section id="places" class="app-section fade-in">
+      <div class="section-header">
+        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">📍 Catálogo de Destinos</h2>
+        <p style="color:rgba(200,169,126,0.7); margin-bottom: 1rem;">Conoce los sitios más emblemáticos antes de visitarlos.</p>
       </div>
-    </div>
+      <div class="places-grid" id="places-grid"></div>
+    </section>
 
-    <div style="height:1.5rem"></div>
-  </div>
-
-  <!-- TAB: MAP -->
-  <div class="tab-content" id="tab-map">
-    <div class="map-header">
-      <div class="map-header-title">🗺 Mapa Turístico · Tarija</div>
-      <div class="map-legend">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ab85a;margin-right:2px"></span>Disponible</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c0304e;margin-right:2px"></span>Recompensa</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#777;margin-right:2px"></span>Visitado</span>
+    <section id="about" class="app-section fade-in">
+      <div class="section-header">
+        <h2 style="font-family:'Playfair Display',serif; font-size:1.5rem;">👤 Tu Perfil</h2>
       </div>
-    </div>
-    <div id="map-container">
-      <div id="tarija-map"></div>
-    </div>
-  </div>
+      <div style="text-align:center;padding:1.2rem;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,126,0.12);border-radius:1.25rem;margin-bottom:1rem">
+        <div style="font-size:2.5rem;margin-bottom:0.4rem">🧭</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream)" id="profile-name">Explorador</div>
+        <div style="font-size:0.72rem;color:var(--sage);margin-top:0.15rem;letter-spacing:0.1em;text-transform:uppercase" id="profile-mode-label">Modo Demo</div>
+      </div>
+    </section>
 
-  <!-- BOTTOM NAV -->
-  <div class="bottom-nav">
-    <button class="nav-tab active" id="nav-home" onclick="switchTab('home')">
-      <span class="tab-icon">🏠</span>
-      <span>Inicio</span>
-    </button>
-    <button class="nav-tab" id="nav-missions" onclick="switchTab('missions')">
-      <span class="tab-icon">🗺️</span>
-      <span>Misiones</span>
-    </button>
-    <button class="nav-tab" id="nav-map" onclick="switchTab('map')">
-      <span class="tab-icon">📍</span>
-      <span>Mapa</span>
-    </button>
-    <button class="nav-tab" id="nav-profile" onclick="switchTab('profile')">
-      <span class="tab-icon">👤</span>
-      <span>Perfil</span>
-    </button>
-  </div>
+  </main>
 </div>
-
 
 <!-- ═══════════════════════════════════════════
      SCREEN: AR CAMERA
