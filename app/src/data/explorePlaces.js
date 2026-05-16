@@ -1,0 +1,17 @@
+export const EXPLORE_PLACES = [
+  { id: 16, emoji: '🍾', name: 'Bodegas Kuhlmann', cat: 'vinedo', shortDesc: 'Bodega centenaria tarijeña. Vinos y singanis envejecidos en barricas de roble francés a 1900m.', missionId: 16 },
+  { id: 0, emoji: '🍇', name: 'Viñedos Kohlberg', cat: 'vinedo', shortDesc: 'Valle Central a 1900m de altitud. 3 generaciones de tradición vinatera.', missionId: 1 },
+  { id: 1, emoji: '🍷', name: 'Bodega Aranjuez', cat: 'vinedo', shortDesc: 'Singani tarijeño desde 1960. Tradición vitivinícola que conquistó Bolivia.', missionId: 8 },
+  { id: 2, emoji: '🦋', name: 'Cañón del Angosto', cat: 'paisaje', shortDesc: 'Cañón de roca roja de 80m tallado por el río Guadalquivir.', missionId: 4 },
+  { id: 3, emoji: '🌅', name: 'Mirador El Portillo', cat: 'paisaje', shortDesc: 'La panorámica más espectacular de los valles tarijeños al atardecer.', missionId: 6 },
+  { id: 4, emoji: '🌿', name: 'Parque Chapaco', cat: 'paisaje', shortDesc: 'Pulmón verde de Tarija. Flora y fauna endémica de los yungas bolivianos.', missionId: 2 },
+  { id: 5, emoji: '🏹', name: 'Cerro Alarache', cat: 'paisaje', shortDesc: 'Vista de los cuatro valles desde 2400 metros de altitud.', missionId: 10 },
+  { id: 6, emoji: '⛪', name: 'Catedral Basílica', cat: 'cultural', shortDesc: 'Corazón espiritual de Tarija. 400 años de historia colonial y mestiza.', missionId: 0 },
+  { id: 7, emoji: '🏺', name: 'Casa Dorada', cat: 'cultural', shortDesc: 'Joya del art nouveau tarijeño. 5 siglos de expresión artística.', missionId: 3 },
+  { id: 8, emoji: '🎸', name: 'Casa de la Cultura', cat: 'cultural', shortDesc: 'Folklore chapaco: cuecas, bailecitos y erke. El alma musical del valle.', missionId: 12 },
+  { id: 9, emoji: '⚔️', name: 'San Lorenzo', cat: 'cultural', shortDesc: 'Escenario de la Batalla de la Tablada (1817). Pueblo de héroes chapacas.', missionId: 5 },
+  { id: 10, emoji: '🦴', name: 'Museo Paleontológico', cat: 'turistico', shortDesc: 'Mayor colección de fósiles de megafauna en Sudamérica.', missionId: 7 },
+  { id: 11, emoji: '🏛️', name: 'Plaza Luis de Fuentes', cat: 'turistico', shortDesc: 'Plaza fundacional de Tarija, 1574. Primera piedra de la ciudad.', missionId: 15 },
+  { id: 12, emoji: '⛪', name: 'Santuario de la Virgen', cat: 'turistico', shortDesc: 'Meta de peregrinos del altiplano y los valles tarijeños.', missionId: 13 },
+  { id: 13, emoji: '🌊', name: 'Río Bermejo', cat: 'turistico', shortDesc: 'Frontera natural con Argentina. Riberas de cedro y caminatas míticas.', missionId: 14 },
+];
